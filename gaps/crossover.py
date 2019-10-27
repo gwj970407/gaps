@@ -10,7 +10,7 @@ BUDDY_PIECE_PRIORITY = -1
 
 class Crossover(object):
 
-    def __init__(self, first_parent, second_parent):
+    def  __init__(self, first_parent, second_parent):
         self._parents = (first_parent, second_parent)
         self._pieces_length = len(first_parent.pieces)
         self._child_rows = first_parent.rows
@@ -167,7 +167,7 @@ class Crossover(object):
 def complementary_orientation(orientation):
     return {
         "T": "D",
-        "R": "L",
         "D": "T",
+        "R": "L",
         "L": "R"
     }.get(orientation, None)

@@ -49,21 +49,26 @@ class GeneticAlgorithm(object):
             elite = self._get_elite_individuals(elites=self._elite_size)
             new_population.extend(elite)
 
+            # 从种群中随机选择popultation - elite_size个父母
             selected_parents = roulette_selection(self._population, elites=self._elite_size)
 
+            # 通过父母生成子代，加入到new_population中
             for first_parent, second_parent in selected_parents:
                 crossover = Crossover(first_parent, second_parent)
                 crossover.run()
                 child = crossover.child()
                 new_population.append(child)
 
+            # 从上一代中选出适应度最高的一个
             fittest = self._best_individual()
 
+            # 如果上一代最佳比历史最佳好，则termination_counter += 1,否则替换
             if fittest.fitness <= best_fitness_score:
                 termination_counter += 1
             else:
                 best_fitness_score = fittest.fitness
 
+            # 如果连续十代都没有更优子代，则退出
             if termination_counter == self.TERMINATION_THRESHOLD:
                 print("\n\n=== GA terminated")
                 print("=== There was no improvement for {} generations".format(self.TERMINATION_THRESHOLD))

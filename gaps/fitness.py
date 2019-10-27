@@ -27,20 +27,29 @@ def dissimilarity_measure(first_piece, second_piece, orientation="LR"):
     rows, columns, _ = first_piece.shape()
     color_difference = None
 
+
+    # piece.shape 应该是三维的矩阵 第一维代表行，第二维代表列
+    # 第三维度如果是彩色图像，则为3 灰度图像和黑白图像为1
     # | L | - | R |
     if orientation == "LR":
+        # 如果是左右关系，则取左边的最右一列的三个通道减去右边的最左一列的三个通道
         color_difference = first_piece[:rows, columns - 1, :] - second_piece[:rows, 0, :]
 
     # | T |
     #   |
     # | D |
     if orientation == "TD":
+        # 如果是上下关系，则取上边的最下一行的三个通道减去下边的最上一列的三个通道
         color_difference = first_piece[rows - 1, :columns, :] - second_piece[0, :columns, :]
 
+    # 先归一化，再利用np计算每个通道距离的平方
     squared_color_difference = np.power(color_difference / 255.0, 2)
+    # 每个通道距离平方和相加就是颜色空间距离（没有开平方）
     color_difference_per_row = np.sum(squared_color_difference, axis=1)
+    # 每个像素点的颜色空间距离相加
     total_difference = np.sum(color_difference_per_row, axis=0)
 
+    # 对结果开方
     value = np.sqrt(total_difference)
 
     return value

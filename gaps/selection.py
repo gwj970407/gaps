@@ -25,6 +25,7 @@ def roulette_selection(population, elites=4):
 
     """
     fitness_values = [individual.fitness for individual in population]
+    # 计算累加适应度
     probability_intervals = [sum(fitness_values[:i + 1]) for i in range(len(fitness_values))]
 
     def select_individual():
@@ -34,6 +35,7 @@ def roulette_selection(population, elites=4):
         return population[selected_index]
 
     selected = []
+    # 减去已经被选中的人， 选出其他存活的图片
     for i in xrange(len(population) - elites):
         first, second = select_individual(), select_individual()
         selected.append((first, second))
