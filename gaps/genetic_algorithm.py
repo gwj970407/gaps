@@ -11,17 +11,22 @@ from gaps.progress_bar import print_progress
 
 class GeneticAlgorithm(object):
 
+
     TERMINATION_THRESHOLD = 10
 
+    # 构造方法：  以下划线开头的是类的内部方法，一般不会被手动调用
     def __init__(self, image, piece_size, population_size, generations, elite_size=2):
+        # 初始化种群： 代数，人口 TODO
         self._image = image
         self._piece_size = piece_size
         self._generations = generations
         self._elite_size = elite_size
         pieces, rows, columns = image_helpers.flatten_image(image, piece_size, indexed=True)
+        # 循环population_size次，每次都将Individual方法调用返回的对象加入到list中
         self._population = [Individual(pieces, rows, columns) for _ in range(population_size)]
         self._pieces = pieces
 
+    # 每个类的方法的第一个参数都是self
     def start_evolution(self, verbose):
         print("=== Pieces:      {}\n".format(len(self._pieces)))
 
@@ -40,6 +45,7 @@ class GeneticAlgorithm(object):
             new_population = []
 
             # Elitism
+            # 取适应度最高的两个图片
             elite = self._get_elite_individuals(elites=self._elite_size)
             new_population.extend(elite)
 

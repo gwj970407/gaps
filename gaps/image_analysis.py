@@ -20,33 +20,39 @@ class ImageAnalysis(object):
 
     @classmethod
     def analyze_image(cls, pieces):
+        # 图片分析
         for piece in pieces:
             # For each edge we keep best matches as a sorted list.
             # Edges with lower dissimilarity_measure have higher priority.
+            # 保存每一块的每个方向匹配度最高的块 420 *4
             cls.best_match_table[piece.id] = {
+                # "T": [{piece.id,dissimilarrity}],
                 "T": [],
                 "R": [],
                 "D": [],
                 "L": []
             }
-
         def update_best_match_table(first_piece, second_piece):
+            # 保存每次计算出来的两个碎片的相似度
+            # 记录每两块之间的相似度，加入到列表之中
             measure = dissimilarity_measure(first_piece, second_piece, orientation)
             cls.put_dissimilarity((first_piece.id, second_piece.id), orientation, measure)
             cls.best_match_table[second_piece.id][orientation[0]].append((first_piece.id, measure))
             cls.best_match_table[first_piece.id][orientation[1]].append((second_piece.id, measure))
 
-        # Calculate dissimilarity measures and best matches for each piece.
+        # Calculate dissimilarity measures and best matches for each piece.计算相似度
         iterations = len(pieces) - 1
         for first in range(iterations):
             print_progress(first, iterations - 1, prefix="=== Analyzing image:")
             for second in range(first + 1, len(pieces)):
+                # 对每一种方向都计算相似度
                 for orientation in ["LR", "TD"]:
                     update_best_match_table(pieces[first], pieces[second])
                     update_best_match_table(pieces[second], pieces[first])
 
         for piece in pieces:
             for orientation in ["T", "L", "R", "D"]:
+                # 对每一块的每个方向的相似度进行排序
                 cls.best_match_table[piece.id][orientation].sort(key=lambda x: x[1])
 
     @classmethod

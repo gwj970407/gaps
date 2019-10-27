@@ -40,7 +40,9 @@ def parse_arguments():
 if __name__ == "__main__":
     args = parse_arguments()
 
+    # 载入图片
     image = cv2.imread(args.image)
+    # 转换颜色空间
     image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
     if args.size is not None:
@@ -58,7 +60,9 @@ if __name__ == "__main__":
 
     # Let the games begin! And may the odds be in your favor!
     start = time()
+    # 新建一个GA对象
     algorithm = GeneticAlgorithm(image, piece_size, args.population, args.generations)
+    # 调用GA对象的开始进化方法
     solution = algorithm.start_evolution(args.verbose)
     end = time()
 

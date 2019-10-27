@@ -26,15 +26,21 @@ class Individual(object):
     FITNESS_FACTOR = 1000
 
     def __init__(self, pieces, rows, columns, shuffle=True):
+
+        # 初始化了一整张图片
         self.pieces = pieces[:]
         self.rows = rows
         self.columns = columns
         self._fitness = None
 
         if shuffle:
+            #[0,1,2,3] -> [3, 1, 2, 0]
             np.random.shuffle(self.pieces)
 
         # Map piece ID to index in Individual's list
+        # pieces : [piece1, piece2, ...]
+        # pipce : {id: 2}
+        # mapping : {3:0, 1:1, 2:2, 0:3}
         self._piece_mapping = {piece.id: index for index, piece in enumerate(self.pieces)}
 
     def __getitem__(self, key):
