@@ -33,6 +33,9 @@ def create_puzzle(image_path, output_path, piece_size):
     image = cv2.imread(image_path)
     pieces, rows, columns = image_helpers.flatten_image(image, piece_size)
 
+    # Create puzzle by stacking pieces
+    puzzle = image_helpers.assemble_image(pieces, rows, columns)
+    cv2.imwrite(str(output_path).replace(".jpg", "_format.jpg"), puzzle)
     # Randomize pieces in order to make puzzle
     np.random.shuffle(pieces)
 
