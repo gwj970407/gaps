@@ -52,15 +52,18 @@ class Individual(object):
 
         Fitness value is calculated as sum of dissimilarity measures between each adjacent pieces.
 
+        这个方法会在第一次调用时被执行，懒初始化fitness，结果是适应度因子除以空间距离，（结果越大适应度越好）
         """
         if self._fitness is None:
             fitness_value = 1 / self.FITNESS_FACTOR
             # For each two adjacent pieces in rows
+            # 累加所有左右关系的碎片的空间距离
             for i in range(self.rows):
                 for j in range(self.columns - 1):
                     ids = (self[i][j].id, self[i][j + 1].id)
                     fitness_value += ImageAnalysis.get_dissimilarity(ids, orientation="LR")
             # For each two adjacent pieces in columns
+            # 累加所有上下关系的碎片的空间距离
             for i in range(self.rows - 1):
                 for j in range(self.columns):
                     ids = (self[i][j].id, self[i + 1][j].id)

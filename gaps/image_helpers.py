@@ -18,6 +18,7 @@ def flatten_image(image, piece_size, indexed=False):
         >>> flat_image = flatten_image(image, 32)
 
     """
+    # // 代表整除，不保留小数
     rows, columns = image.shape[0] // piece_size, image.shape[1] // piece_size
     pieces = []
 

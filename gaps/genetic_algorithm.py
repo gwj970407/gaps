@@ -54,6 +54,7 @@ class GeneticAlgorithm(object):
 
             # 通过父母生成子代，加入到new_population中
             for first_parent, second_parent in selected_parents:
+                # 交叉互换，生成子代
                 crossover = Crossover(first_parent, second_parent)
                 crossover.run()
                 child = crossover.child()
@@ -83,6 +84,7 @@ class GeneticAlgorithm(object):
 
     def _get_elite_individuals(self, elites):
         """Returns first 'elite_count' fittest individuals from population"""
+        # 适应度在这里被attrgetter调用，会计算适应度并排序
         return sorted(self._population, key=attrgetter("fitness"))[-elites:]
 
     def _best_individual(self):

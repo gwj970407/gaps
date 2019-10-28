@@ -24,18 +24,20 @@ class ImageAnalysis(object):
         for piece in pieces:
             # For each edge we keep best matches as a sorted list.
             # Edges with lower dissimilarity_measure have higher priority.
-            # 保存每一块的每个方向匹配度最高的块 420 *4
+            # 保存每一块的每个方向匹配度最高的块 420 * 4
             cls.best_match_table[piece.id] = {
-                # "T": [{piece.id,dissimilarrity}],
+                # "T": [{piece.id,dissimilarity}],
                 "T": [],
                 "R": [],
                 "D": [],
                 "L": []
             }
+
         def update_best_match_table(first_piece, second_piece):
             # 保存每次计算出来的两个碎片的相似度
-            # 记录每两块之间的相似度，加入到列表之中
+            # 记录每两块之间的相似度，加入到列表之中 (用颜色空间计算两个edge的距离)
             measure = dissimilarity_measure(first_piece, second_piece, orientation)
+            # 保存每对的相似度
             cls.put_dissimilarity((first_piece.id, second_piece.id), orientation, measure)
             cls.best_match_table[second_piece.id][orientation[0]].append((first_piece.id, measure))
             cls.best_match_table[first_piece.id][orientation[1]].append((second_piece.id, measure))

@@ -23,6 +23,7 @@ class Crossover(object):
         self._max_column = 0
 
         self._kernel = {}
+        # 占位符，表示某个位置是否已经有图片了
         self._taken_positions = set()
 
         # Priority queue
@@ -41,6 +42,7 @@ class Crossover(object):
         self._initialize_kernel()
 
         while len(self._candidate_pieces) > 0:
+            # 弹出一个最优先级的候选快，共享区域最小，互为最优匹配为次之，普通的最优相似度最慢pop出
             _, (position, piece_id), relative_piece = heapq.heappop(self._candidate_pieces)
 
             if position in self._taken_positions:
@@ -49,16 +51,22 @@ class Crossover(object):
             # If piece is already placed, find new piece candidate and put it back to
             # priority queue
             if piece_id in self._kernel:
+                # relative_piece[0] 代表piece_id, [1]代表方向，寻找这个位置这个方向的新最优匹配块
                 self.add_piece_candidate(relative_piece[0], relative_piece[1], position)
                 continue
 
+            # 把这一块放入拼图中
             self._put_piece_to_kernel(piece_id, position)
 
     def _initialize_kernel(self):
+        # 取左父亲图片的随机一个piece作为初始根piece
         root_piece = self._parents[0].pieces[int(random.uniform(0, self._pieces_length))]
         self._put_piece_to_kernel(root_piece.id, (0, 0))
 
     def _put_piece_to_kernel(self, piece_id, position):
+        """
+        将这一块各个位置的最优匹配块都添加到候选块中
+        """
         self._kernel[piece_id] = position
         self._taken_positions.add(position)
         self._update_candidate_pieces(piece_id, position)
@@ -67,19 +75,21 @@ class Crossover(object):
         available_boundaries = self._available_boundaries(position)
 
         for orientation, position in available_boundaries:
+            # 把这个块各个方向上的最优匹配块加入候选块中
             self.add_piece_candidate(piece_id, orientation, position)
 
     def add_piece_candidate(self, piece_id, orientation, position):
+        # 判断这一块在父母中是否有同样的共享块，（这个方向上的块一样）
         shared_piece = self._get_shared_piece(piece_id, orientation)
         if self._is_valid_piece(shared_piece):
             self._add_shared_piece_candidate(shared_piece, position, (piece_id, orientation))
             return
-
+        # 判断这一块是否在父母中任意一方中有最有匹配块
         buddy_piece = self._get_buddy_piece(piece_id, orientation)
         if self._is_valid_piece(buddy_piece):
             self._add_buddy_piece_candidate(buddy_piece, position, (piece_id, orientation))
             return
-
+        # 取得这一块的最优匹配块， 优先级为相似度
         best_match_piece, priority = self._get_best_match_piece(piece_id, orientation)
         if self._is_valid_piece(best_match_piece):
             self._add_best_match_piece_candidate(best_match_piece, position, priority, (piece_id, orientation))
@@ -97,12 +107,15 @@ class Crossover(object):
         first_buddy = ImageAnalysis.best_match(piece_id, orientation)
         second_buddy = ImageAnalysis.best_match(first_buddy, complementary_orientation(orientation))
 
+        # 如果两块互相为匹配度最高的块，则表示很有可能是相邻块
         if second_buddy == piece_id:
             for edge in [parent.edge(piece_id, orientation) for parent in self._parents]:
                 if edge == first_buddy:
+                # 如果父母中有任意一方有最佳匹配块，则返回
                     return edge
 
     def _get_best_match_piece(self, piece_id, orientation):
+        # 根据取得piece_id取得当前方向上相似度最高的碎片，如果已存在于kernel，则取下一个
         for piece, dissimilarity_measure in ImageAnalysis.best_match_table[piece_id][orientation]:
             if self._is_valid_piece(piece):
                 return piece, dissimilarity_measure
@@ -132,6 +145,7 @@ class Crossover(object):
             }
 
             for orientation, position in positions.items():
+                # 如果这个位置还没有碎片，并且这个position在图片范围内（0~rows， 0~columns）
                 if position not in self._taken_positions and self._is_in_range(position):
                     self._update_kernel_boundaries(position)
                     boundaries.append((orientation, position))
@@ -164,6 +178,7 @@ class Crossover(object):
         return piece_id is not None and piece_id not in self._kernel
 
 
+# 取得传入方向的互补方向
 def complementary_orientation(orientation):
     return {
         "T": "D",
