@@ -30,6 +30,7 @@ def roulette_selection(population, elites=4):
 
     def select_individual():
         """Selects random individual from population based on fitess value"""
+        # 基于每个图片的适应度，随机挑选一张图片
         random_select = random.uniform(0, probability_intervals[-1])
         selected_index = bisect.bisect_left(probability_intervals, random_select)
         return population[selected_index]

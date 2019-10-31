@@ -81,7 +81,7 @@ class SizeDetector(object):
     def _find_size_candidates(self, image):
         binary_image = self._filter_image(image)
 
-        _, contours, _ = cv2.findContours(binary_image,
+        contours, _ = cv2.findContours(binary_image,
                                           cv2.RETR_LIST,
                                           cv2.CHAIN_APPROX_SIMPLE)
 
