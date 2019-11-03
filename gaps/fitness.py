@@ -1,7 +1,10 @@
 import numpy as np
 
+VGiL_dict = {}
+ViL_dict = {}
 
-def dissimilarity_measure(first_piece, second_piece, orientation="LR"):
+
+def dissimilarity_measure0(first_piece, second_piece, orientation="LR"):
     """Calculates color difference over all neighboring pixels over all color channels.
 
     The dissimilarity measure relies on the premise that adjacent jigsaw pieces in the original image tend to share
@@ -54,9 +57,8 @@ def dissimilarity_measure(first_piece, second_piece, orientation="LR"):
     return value
 
 
-def dissimilarity_measure_advanced(first_piece, second_piece, orientation="LR"):
-    # FIXME
-    # def dissimilarity_measure(first_piece, second_piece, orientation="LR"):
+# def dissimilarity_measure_advanced(first_piece, second_piece, orientation="LR"):
+def dissimilarity_measure(first_piece, second_piece, orientation="LR"):
     rows, columns, _ = first_piece.shape()
     color_difference = None
 
@@ -64,308 +66,230 @@ def dissimilarity_measure_advanced(first_piece, second_piece, orientation="LR"):
     # 第三维度如果是彩色图像，则为3 灰度图像和黑白图像为1
     # | L | - | R |
     if orientation == "LR":
+        # FIXME add weight to G
         # 如果是左右关系，则取左边的最右一列的三个通道减去右边的最左一列的三个通道
-        color_difference = DLR(first_piece, second_piece) + DRL(first_piece, second_piece) \
-                           + DGLR(first_piece, second_piece) + DGRL(first_piece, second_piece)
+        color_difference = D(first_piece, second_piece, 'L') + D(first_piece, second_piece, 'R') \
+                           + DG(first_piece, second_piece, 'L') + DG(first_piece, second_piece, 'R')
+        v = D(first_piece, second_piece, 'L') + D(first_piece, second_piece, 'R')
+        v2 = DG(first_piece, second_piece, 'L') + DG(first_piece, second_piece, 'R')
+        # print("v= %s", v)
+        # print("v2= %s", v2)
 
     # | T |
     #   |
     # | D |
     if orientation == "TD":
         # 如果是上下关系，则取上边的最下一行的三个通道减去下边的最上一列的三个通道
-        color_difference = DTD(first_piece, second_piece) + DTD(first_piece, second_piece) \
-                           + DGTD(first_piece, second_piece) + DGTD(first_piece, second_piece)
+        color_difference = D(first_piece, second_piece, 'T') + D(first_piece, second_piece, 'D') \
+                           + DG(first_piece, second_piece, 'T') + DG(first_piece, second_piece, 'D')
 
     return color_difference
 
 
-def DGLR(first_piece, second_piece):
+def get_VGiL_inversion(*args):
+    if args in VGiL_dict:
+        return VGiL_dict[args]
+    v = np.linalg.inv(np.cov(VGiL(args[0], args[1])))
+    VGiL_dict[args] = v
+    return v
+
+
+def DG(first_piece, second_piece, position):
     rows, columns, _ = first_piece.shape()
-    x = np.ndim(3)
-    v = np.linalg.inv(np.var(VGiLLR(first_piece)))
-    for i in range(rows):
-        left = CSDGLR(first_piece, second_piece) - ECABGLR(first_piece, second_piece)
-        right = left.T
-        p = np.dot(left, v)
-        x += np.dot(p, right)
+    res = []
+    if position == 'L':
+        v = get_VGiL_inversion(first_piece, 'L')
+        for i in range(rows):
+            left = CSDG(first_piece, second_piece, i, 'L') - ECABG(first_piece, second_piece, i, 'L')
+            right = left.T
+            res.append(np.dot(np.dot(left, v), right))
+    elif position == 'R':
+        v = get_VGiL_inversion(second_piece, 'R')
+        for i in range(rows):
+            left = CSDG(first_piece, second_piece, i, 'R') - ECABG(first_piece, second_piece, i, 'R')
+            right = left.T
+            res.append(np.dot(np.dot(left, v), right))
+    elif position == 'T':
+        v = get_VGiL_inversion(first_piece, 'T')
+        for i in range(columns):
+            left = CSDG(first_piece, second_piece, i, 'T') - ECABG(first_piece, second_piece, i, 'T')
+            right = left.T
+            res.append(np.dot(np.dot(left, v), right))
+    elif position == 'D':
+        v = get_VGiL_inversion(second_piece, 'D')
+        for i in range(columns):
+            left = CSDG(first_piece, second_piece, i, 'D') - ECABG(first_piece, second_piece, i, 'D')
+            right = left.T
+            res.append(np.dot(np.dot(left, v), right))
+    return np.sum((np.array(res)))
 
 
-def DGRL(first_piece, second_piece):
+def get_ViL_inversion(*args):
+    if args in ViL_dict:
+        return ViL_dict[args]
+    v = np.linalg.inv(np.cov(ViL(args[0], args[1])))
+    ViL_dict[args] = v
+    return v
+
+
+def D(first_piece, second_piece, position):
     rows, columns, _ = first_piece.shape()
-    x = np.ndim(3)
-    v = np.linalg.inv(np.var(VGiLLR(second_piece)))
-    for i in range(rows):
-        left = CSDGRL(first_piece, second_piece) - ECABGRL(first_piece, second_piece)
-        right = left.T
-        p = np.dot(left, v)
-        x += np.dot(p, right)
+    res = []
+    if position == 'L':
+        # size = 3 * 3
+        v = get_ViL_inversion(first_piece, 'L')
+        for i in range(rows):
+            # size = 1 * 3
+            left = CSD(first_piece, second_piece, i, 'L') - ECAB(first_piece, second_piece, i, 'L')
+            # size = 3 * 1
+            right = left.T
+            res.append(np.dot(np.dot(left, v), right))
+    elif position == 'R':
+        v = get_ViL_inversion(second_piece, 'R')
+        for i in range(rows):
+            left = CSD(first_piece, second_piece, i, 'R') - ECAB(first_piece, second_piece, i, 'R')
+            right = left.T
+            res.append(np.dot(np.dot(left, v), right))
+    elif position == 'T':
+        v = get_ViL_inversion(first_piece, 'T')
+        for i in range(columns):
+            left = CSD(first_piece, second_piece, i, 'T') - ECAB(first_piece, second_piece, i, 'T')
+            right = left.T
+            res.append(np.dot(np.dot(left, v), right))
+    elif position == 'D':
+        v = get_ViL_inversion(second_piece, 'D')
+        for i in range(rows):
+            left = CSD(first_piece, second_piece, i, 'D') - ECAB(first_piece, second_piece, i, 'D')
+            right = left.T
+            res.append(np.dot(np.dot(left, v), right))
+    return np.sum(np.array(res))
 
 
-def DGTD(first_piece, second_piece):
-    rows, columns, _ = first_piece.shape()
-    x = np.ndim(3)
-    v = np.linalg.inv(np.var(VGiLTD(first_piece)))
-    for i in range(rows):
-        left = CSDGTD(first_piece, second_piece) - ECABGTD(first_piece, second_piece)
-        right = left.T
-        p = np.dot(left, v)
-        x += np.dot(p, right)
-
-
-def DGDT(first_piece, second_piece):
-    rows, columns, _ = first_piece.shape()
-    x = np.ndim(3)
-    v = np.linalg.inv(np.var(VGiLTD(second_piece)))
-    for i in range(rows):
-        left = CSDGDT(first_piece, second_piece) - ECABGDT(first_piece, second_piece)
-        right = left.T
-        p = np.dot(left, v)
-        x += np.dot(p, right)
-
-
-def DLR(first_piece, second_piece):
-    rows, columns, _ = first_piece.shape()
-    x = np.ndim(3)
-    v = np.linalg.inv(np.cov(ViLLR(first_piece)))
-    for i in range(columns):
-        left = CSDLR(first_piece, second_piece, i) - ECABLR(first_piece, second_piece, i)
-        right = left.T
-        p = np.dot(left, v)
-        x += np.dot(np.linalg.inv(p), right)
-
-
-def DTD(first_piece, second_piece):
-    rows, columns, _ = first_piece.shape()
-    x = np.ndim(3)
-    v = np.linalg.inv(np.cov(ViLTD(first_piece)))
-    for i in range(columns):
-        left = CSDTD(first_piece, second_piece, i) - ECABTD(first_piece, second_piece, i)
-        right = left.T
-        p = np.dot(left, v)
-        x += np.dot(np.linalg.inv(p), right)
-
-
-def DRL(first_piece, second_piece):
-    rows, columns, _ = first_piece.shape()
-    x = np.ndim(3)
-    v = np.linalg.inv(np.cov(ViLLR(second_piece)))
-    for i in range(rows):
-        left = CSDRL(first_piece, second_piece, i) - CSDRL(first_piece, second_piece, i)
-        right = left.T
-        p = np.dot(left, v)
-        x += np.dot(np.linalg.inv(p), right)
-
-
-def DDT(first_piece, second_piece):
-    rows, columns, _ = first_piece.shape()
-    x = np.ndim(3)
-    v = np.linalg.inv(np.cov(ViLLR(second_piece)))
-    for i in range(rows):
-        left = CSDDT(first_piece, second_piece) - CSDDT(first_piece, second_piece)
-        right = left.T
-        p = np.dot(left, v)
-        x += np.dot(np.linalg.inv(p), right)
-
-
-def CSDLR(first_piece, second_piece, s):
+def CSD(first_piece, second_piece, s, position):
     """
         color space distance LR
         ΛijLR
     """
     rows, columns, _ = first_piece.shape()
-    return second_piece[s, 0, :] - first_piece[s, columns - 1, :]
+    if position == 'L':
+        return second_piece[s, 0, :] - first_piece[s, columns - 1, :]
+    elif position == 'R':
+        return first_piece[s, columns - 1, :] - second_piece[s, 0, :]
+    elif position == 'T':
+        return second_piece[0, s, :] - first_piece[columns - 1, s, :]
+    elif position == 'D':
+        return first_piece[columns - 1, s, :] - second_piece[0, s, :]
 
 
-def CSDTD(first_piece, second_piece, s):
+def CSDG(first_piece, second_piece, s, position):
     """
-        color space distance LR
-        ΛijLR
-    """
-    rows, columns, _ = first_piece.shape()
-    return second_piece[0, s, :] - first_piece[columns - 1, s, :]
-
-
-def CSDGLR(first_piece, second_piece, s):
-    """
-        color space distance LR
+        color space distance gradients
         Λ'ijLR
     """
     rows, columns, _ = first_piece.shape()
-    return epxlD(first_piece, s, 0) - epxlD(second_piece, s, columns - 1)
+    if position == 'L':
+        return epxl(second_piece, s, 0, 'D') - epxl(first_piece, s, columns - 1, 'D')
+    elif position == 'R':
+        return epxl(first_piece, s, columns - 1, 'D') - epxl(second_piece, s, 0, 'D')
+    elif position == 'T':
+        return epxl(second_piece, 0, s, 'H') - epxl(first_piece, columns - 1, s, 'H')
+    elif position == 'D':
+        return epxl(first_piece, columns - 1, s, 'H') - epxl(second_piece, 0, s, 'H')
 
 
-def CSDGTD(first_piece, second_piece, s):
-    """
-        color space distance LR
-        Λ'ijLR
-    """
-    rows, columns, _ = first_piece.shape()
-    return epxlH(first_piece, 0, s) - epxlH(second_piece, columns - 1, s)
-
-
-def CSDRL(first_piece, second_piece, s):
-    """
-        color space distance RL
-        ΛijRL
-    """
-    rows, columns, _ = first_piece.shape()
-    return first_piece[s, columns - 1, :] - second_piece[s, 0, :]
-
-
-def CSDDT(first_piece, second_piece, s):
-    """
-        color space distance RL
-        ΛijRL
-    """
-    rows, columns, _ = first_piece.shape()
-    return first_piece[columns - 1, s, :] - second_piece[0, s, :]
-
-
-def CSDGRL(first_piece, second_piece, s):
-    """
-        color space distance LR
-        Λ'ijLR
-    """
-    rows, columns, _ = first_piece.shape()
-    return epxlD(first_piece, s, columns - 1) - epxlD(second_piece, s, 0)
-
-
-def CSDGDT(first_piece, second_piece, s):
-    """
-        color space distance LR
-        Λ'ijLR
-    """
-    rows, columns, _ = first_piece.shape()
-    return epxlH(first_piece, columns - 1, s) - epxlH(second_piece, 0, s)
-
-
-def ECABLR(first_piece, second_piece, s):
+def ECAB(first_piece, second_piece, s, position):
     """
         expected change across the boundary of the two piece
     """
     rows, columns, _ = first_piece.shape()
-    value = 0.5 * (first_piece[s, columns - 1, :] - first_piece[s, columns - 2, :]
-                   + second_piece[s, 1, :] - second_piece[s, 0, :])
+    value = None
+    if position == 'L':
+        value = 0.5 * (first_piece[s, columns - 1, :] - first_piece[s, columns - 2, :]
+                       + second_piece[s, 1, :] - second_piece[s, 0, :])
+    elif position == 'R':
+        value = 0.5 * (first_piece[s, columns - 2, :] - first_piece[s, columns - 1, :]
+                       + second_piece[s, 0, :] - second_piece[s, 1, :])
+    elif position == 'T':
+        value = 0.5 * (first_piece[columns - 1, s, :] - first_piece[columns - 2, s, :]
+                       + second_piece[1, s, :] - second_piece[0, s, :])
+    elif position == 'D':
+        value = 0.5 * (first_piece[columns - 2, s, :] - first_piece[columns - 1, s, :]
+                       + second_piece[0, s, :] - second_piece[1, s, :])
     return value
 
 
-def ECABTD(first_piece, second_piece, s):
+def ECABG(first_piece, second_piece, s, position):
     """
         expected change across the boundary of the two piece
     """
     rows, columns, _ = first_piece.shape()
-    value = 0.5 * (first_piece[columns - 1, s, :] - first_piece[columns - 2, s, :]
-                   + second_piece[1, s, :] - second_piece[0, s, :])
+    value = None
+    if position == 'L':
+        value = 0.5 * (epxl(first_piece, s, columns - 1, 'D') - epxl(first_piece, s, columns - 2, 'D')
+                       + epxl(second_piece, s, 1, 'D') - epxl(second_piece, s, 0, 'D'))
+    elif position == 'R':
+        value = 0.5 * (epxl(first_piece, s, columns - 2, 'D') - epxl(first_piece, s, columns - 1, 'D')
+                       + epxl(second_piece, s, 0, 'D') - epxl(second_piece, s, 1, 'D'))
+    elif position == 'T':
+        value = 0.5 * (epxl(first_piece, columns - 1, s, 'H') - epxl(first_piece, columns - 2, s, 'H')
+                       + epxl(second_piece, 1, s, 'H') - epxl(second_piece, 0, s, 'H'))
+    elif position == 'D':
+        value = 0.5 * (epxl(first_piece, columns - 2, s, 'H') - epxl(first_piece, columns - 1, s, 'H')
+                       + epxl(second_piece, 0, s, 'H') - epxl(second_piece, 1, s, 'H'))
     return value
 
 
-def ECABGLR(first_piece, second_piece, s):
-    """
-        expected change across the boundary of the two piece
-    """
-    rows, columns, _ = first_piece.shape()
-    value = 0.5 * (epxlD(first_piece, s, columns - 1) - epxlD(first_piece, s, columns - 2)
-                   + epxlD(second_piece, s, 1) - epxlD(second_piece, s, 0))
-    return value
-
-
-def ECABGTD(first_piece, second_piece, s):
-    """
-        expected change across the boundary of the two piece
-    """
-    rows, columns, _ = first_piece.shape()
-    value = 0.5 * (epxlH(first_piece, columns - 1, s) - epxlH(first_piece, columns - 2, s)
-                   + epxlH(second_piece, 1, s) - epxlH(second_piece, 0, s))
-    return value
-
-
-def ECABRL(first_piece, second_piece, s):
-    """
-        expected change across the boundary of the two piece
-    """
-    rows, columns, _ = first_piece.shape()
-    value = 0.5 * (first_piece[s, columns - 2, :] - first_piece[s, columns - 1, :]
-                   + second_piece[s, 0, :] - second_piece[s, 1, :])
-    return value
-
-
-def ECABDT(first_piece, second_piece, s):
-    """
-        expected change across the boundary of the two piece
-    """
-    rows, columns, _ = first_piece.shape()
-    value = 0.5 * (first_piece[columns - 2, s, :] - first_piece[columns - 1, s, :]
-                   + second_piece[0, s, :] - second_piece[1, s, :])
-    return value
-
-
-def ECABGRL(first_piece, second_piece, s):
-    """
-        expected change across the boundary of the two piece
-    """
-    rows, columns, _ = first_piece.shape()
-    value = 0.5 * (epxlD(first_piece, s, columns - 2) - epxlD(first_piece, s, columns - 1)
-                   + epxlD(second_piece, s, 0) - epxlD(second_piece, s, 1))
-    return value
-
-
-def ECABGDT(first_piece, second_piece, s):
-    """
-        expected change across the boundary of the two piece
-    """
-    rows, columns, _ = first_piece.shape()
-    value = 0.5 * (epxlH(first_piece, columns - 2, s) - epxlH(first_piece, columns - 1, s)
-                   + epxlH(second_piece, 0, s) - epxlH(second_piece, 1, s))
-    return value
-
-
-def ViLLR(piece):
+def ViL(piece, position):
     """
      ViL calculated from samples,{xi(s,S)−xi(s,S−1))∣s=1,2,...S}.
     """
     rows, columns, _ = piece.shape()
-    result = []
-    for i in range(rows):
-        result.append(piece[i, columns - 1, :] - piece[i, columns - 2, :])
-    return np.array(result)
+    result = np.zeros(shape=[3, rows + 3])
+    if position == 'L':
+        for i in range(rows):
+            # [1,2,3]
+            result[:, i] = piece[i, columns - 1, :] - piece[i, columns - 2, :]
+    elif position == 'R':
+        for i in range(rows):
+            result[:, i] = piece[i, 0, :] - piece[i, 1, :]
+    elif position == 'T':
+        for i in range(columns):
+            result[:, i] = piece[rows - 1, i, :] - piece[rows - 2, i, :]
+    elif position == 'D':
+        for i in range(columns):
+            result[:, i] = piece[0, i, :] - piece[1, i, :]
+    result[:, -3] = [1, 0, 0]
+    result[:, -2] = [0, 1, 0]
+    result[:, -1] = [0, 0, 1]
+    return result
 
 
-def ViLTD(piece):
+def VGiL(piece, position):
     """
-     ViL calculated from samples,{xi(s,S)−xi(s,S−1))∣s=1,2,...S}.
-    """
-    rows, columns, _ = piece.shape()
-    result = []
-    for i in range(columns):
-        result.append(piece[rows - 1, i, :] - piece[rows - 2, i, :])
-    return np.array(result)
-
-
-def VGiLLR(piece):
-    """
-     ViL calculated from samples,{xi(s,S)−xi(s,S−1))∣s=1,2,...S}.
-    """
-    rows, columns, _ = piece.shape()
-    result = []
-    for i in range(1, rows):
-        result.append(epxlD(piece, i, columns - 1) - epxlD(piece, i, columns - 2))
-    return np.array(result)
-
-
-def VGiLTD(piece, s):
-    """
-     ViL calculated from samples,{xi(s,S)−xi(s,S−1))∣s=1,2,...S}.
+     VGiL calculated from samples,{δ(s,S)−δ(s,S−1))∣s=2,2,...S}.
     """
     rows, columns, _ = piece.shape()
-    result = []
-    for i in range(1, columns):
-        result.append(epxlH(piece, rows - 1, s) - epxlH(piece, rows - 2, s))
-    return np.array(result)
+    result = np.zeros(shape=[3, rows + 3])
+    if position == 'L':
+        for i in range(1, rows):
+            result[:, i] = epxl(piece, i, columns - 1, 'D') - epxl(piece, i, columns - 2, 'D')
+    elif position == 'R':
+        for i in range(1, rows):
+            result[:, i] = epxl(piece, i, 0, 'D') - epxl(piece, i, 1, 'D')
+    elif position == 'T':
+        for i in range(1, columns):
+            result[:, i] = epxl(piece, rows - 1, i, 'H') - epxl(piece, rows - 2, i, 'H')
+    elif position == 'D':
+        for i in range(1, columns):
+            result[:, i] = epxl(piece, 0, i, 'H') - epxl(piece, 1, i, 'H')
+    result[:, -3] = [1, 0, 0]
+    result[:, -2] = [0, 1, 0]
+    result[:, -1] = [0, 0, 1]
+    return result
 
 
-def epxlD(piece, x, y):
-    return piece[x, y, :] - piece[x - 1, y, :]
-
-
-def epxlH(piece, x, y):
-    return piece[x, y, :] - piece[x, y - 1, :]
+def epxl(piece, x, y, position):
+    if position == 'D':
+        return piece[x, y, :] - piece[x - 1, y, :]
+    elif position == 'H':
+        return piece[x, y, :] - piece[x, y - 1, :]
