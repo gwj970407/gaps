@@ -7,12 +7,11 @@ from gaps.individual import Individual
 from gaps.image_analysis import ImageAnalysis
 from gaps.plot import Plot
 from gaps.progress_bar import print_progress
+import cv2
 
 
 class GeneticAlgorithm(object):
-
-
-    TERMINATION_THRESHOLD = 10
+    TERMINATION_THRESHOLD = 20
 
     # 构造方法：  以下划线开头的是类的内部方法，一般不会被手动调用
     def __init__(self, image, piece_size, population_size, generations, elite_size=2):
@@ -62,6 +61,13 @@ class GeneticAlgorithm(object):
 
             # 从上一代中选出适应度最高的一个
             fittest = self._best_individual()
+
+            image = fittest.to_image()
+            rightImage = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
+            cv2.imwrite("temp_image_" + str(generation) + ".jpg", rightImage)
+            best_adjoin = fittest.best_adjoin(self._piece_size)
+            rightImage = cv2.cvtColor(best_adjoin, cv2.COLOR_RGB2BGR)
+            cv2.imwrite("temp_image_best_adjoin_" + str(generation) + ".jpg", rightImage)
 
             # 如果上一代最佳比历史最佳好，则termination_counter += 1,否则替换
             if fittest.fitness <= best_fitness_score:

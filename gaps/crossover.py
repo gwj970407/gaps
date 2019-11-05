@@ -100,7 +100,9 @@ class Crossover(object):
         first_parent_edge = first_parent.edge(piece_id, orientation)
         second_parent_edge = second_parent.edge(piece_id, orientation)
 
-        if first_parent_edge == second_parent_edge:
+        if first_parent_edge != None and second_parent_edge != None \
+                and first_parent_edge == second_parent_edge and \
+                ImageAnalysis.best_match(first_parent_edge, orientation) == ImageAnalysis.best_match(second_parent_edge, orientation):
             return first_parent_edge
 
     def _get_buddy_piece(self, piece_id, orientation):
@@ -111,7 +113,7 @@ class Crossover(object):
         if second_buddy == piece_id:
             for edge in [parent.edge(piece_id, orientation) for parent in self._parents]:
                 if edge == first_buddy:
-                # 如果父母中有任意一方有最佳匹配块，则返回
+                    # 如果父母中有任意一方有最佳匹配块，则返回
                     return edge
 
     def _get_best_match_piece(self, piece_id, orientation):
@@ -145,7 +147,7 @@ class Crossover(object):
             }
 
             for orientation, position in positions.items():
-                # 如果这个位置还没有碎片，并且这个position在图片范围内（0~rows， 0~columns）
+                # 如果这个位置还没有碎片，并且这个position在图片范围内(当前碎片未超过边界)
                 if position not in self._taken_positions and self._is_in_range(position):
                     self._update_kernel_boundaries(position)
                     boundaries.append((orientation, position))

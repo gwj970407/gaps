@@ -1,6 +1,7 @@
 import numpy as np
 from gaps import image_helpers
 from gaps.image_analysis import ImageAnalysis
+from gaps.piece import Piece
 
 
 class Individual(object):
@@ -34,7 +35,7 @@ class Individual(object):
         self._fitness = None
 
         if shuffle:
-            #[0,1,2,3] -> [3, 1, 2, 0]
+            # [0,1,2,3] -> [3, 1, 2, 0]
             np.random.shuffle(self.pieces)
 
         # Map piece ID to index in Individual's list
@@ -80,6 +81,51 @@ class Individual(object):
     def piece_by_id(self, identifier):
         """"Return specific piece from individual"""
         return self.pieces[self._piece_mapping[identifier]]
+
+    def best_adjoin(self, piece_size):
+        pieces = np.reshape(self.pieces, (self.rows, self.columns))
+        empty_image = np.zeros((piece_size, piece_size, pieces[0][0].shape()[2]))
+        empty_piece = Piece(empty_image, 0)
+        for row in range(self.rows):
+            for col in range(self.columns):
+                if row == 0:
+                    if col == 0 and ImageAnalysis.best_match(pieces[row][col].id, "D") == pieces[row + 1][col].id \
+                            and ImageAnalysis.best_match(pieces[row][col].id, "R") == pieces[row][col + 1].id:
+                        continue
+                    if col < self.columns - 1 and ImageAnalysis.best_match(pieces[row][col].id, "D") == pieces[row + 1][col].id \
+                            and ImageAnalysis.best_match(pieces[row][col].id, "R") == pieces[row][col + 1].id \
+                            and ImageAnalysis.best_match(pieces[row][col].id, "L") == pieces[row][col - 1].id:
+                        continue
+                    if col == self.columns - 1 and ImageAnalysis.best_match(pieces[row][col].id, "D") == pieces[row + 1][col].id \
+                            and ImageAnalysis.best_match(pieces[row][col].id, "L") == pieces[row][col - 1].id:
+                        continue
+                if 0 < row < self.rows - 1:
+                    if col == 0 and ImageAnalysis.best_match(pieces[row][col].id, "D") == pieces[row + 1][col].id \
+                            and ImageAnalysis.best_match(pieces[row][col].id, "T") == pieces[row - 1][col].id \
+                            and ImageAnalysis.best_match(pieces[row][col].id, "R") == pieces[row][col + 1].id:
+                        continue
+                    if col < self.columns - 1 and ImageAnalysis.best_match(pieces[row][col].id, "T") == pieces[row - 1][col].id \
+                            and ImageAnalysis.best_match(pieces[row][col].id, "D") == pieces[row + 1][col].id \
+                            and ImageAnalysis.best_match(pieces[row][col].id, "L") == pieces[row][col - 1].id \
+                            and ImageAnalysis.best_match(pieces[row][col].id, "R") == pieces[row][col + 1].id:
+                        continue
+                    if col == self.columns - 1 and ImageAnalysis.best_match(pieces[row][col].id, "T") == pieces[row - 1][col].id \
+                            and ImageAnalysis.best_match(pieces[row][col].id, "D") == pieces[row + 1][col].id \
+                            and ImageAnalysis.best_match(pieces[row][col].id, "L") == pieces[row][col - 1].id:
+                        continue
+                if row == self.rows - 1:
+                    if col == 0 and ImageAnalysis.best_match(pieces[row][col].id, "T") == pieces[row - 1][col].id \
+                            and ImageAnalysis.best_match(pieces[row][col].id, "R") == pieces[row][col + 1].id:
+                        continue
+                    if col < self.columns - 1 and ImageAnalysis.best_match(pieces[row][col].id, "R") == pieces[row][col + 1].id \
+                            and ImageAnalysis.best_match(pieces[row][col].id, "L") == pieces[row][col - 1].id \
+                            and ImageAnalysis.best_match(pieces[row][col].id, "T") == pieces[row - 1][col].id:
+                        continue
+                    if col == self.columns - 1 and ImageAnalysis.best_match(pieces[row][col].id, "L") == pieces[row][col - 1].id \
+                            and ImageAnalysis.best_match(pieces[row][col].id, "T") == pieces[row - 1][col].id:
+                        continue
+                pieces[row][col] = empty_piece
+        return image_helpers.assemble_image([each.image for each in pieces.flatten()], self.rows, self.columns)
 
     def to_image(self):
         """Converts individual to showable image"""

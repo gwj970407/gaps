@@ -70,8 +70,8 @@ def dissimilarity_measure(first_piece, second_piece, orientation="LR"):
         # 如果是左右关系，则取左边的最右一列的三个通道减去右边的最左一列的三个通道
         color_difference = D(first_piece, second_piece, 'L') + D(first_piece, second_piece, 'R') \
                            + DG(first_piece, second_piece, 'L') + DG(first_piece, second_piece, 'R')
-        v = D(first_piece, second_piece, 'L') + D(first_piece, second_piece, 'R')
-        v2 = DG(first_piece, second_piece, 'L') + DG(first_piece, second_piece, 'R')
+        # v = D(first_piece, second_piece, 'L') + D(first_piece, second_piece, 'R')
+        # v2 = DG(first_piece, second_piece, 'L') + DG(first_piece, second_piece, 'R')
         # print("v= %s", v)
         # print("v2= %s", v2)
 
@@ -100,28 +100,32 @@ def DG(first_piece, second_piece, position):
     if position == 'L':
         v = get_VGiL_inversion(first_piece, 'L')
         for i in range(rows):
-            left = CSDG(first_piece, second_piece, i, 'L') - ECABG(first_piece, second_piece, i, 'L')
+            left = 1.5 * epxl(second_piece, i, 0, 'D') - 1.5 * epxl(first_piece, i, columns - 1, 'D') + 0.5 * epxl(first_piece, i, columns - 2, 'D') - 0.5 * epxl(second_piece, i, 1, 'D')
+            # left = CSDG(first_piece, second_piece, i, 'L') - ECABG(first_piece, second_piece, i, 'L')
             right = left.T
             res.append(np.dot(np.dot(left, v), right))
     elif position == 'R':
         v = get_VGiL_inversion(second_piece, 'R')
         for i in range(rows):
-            left = CSDG(first_piece, second_piece, i, 'R') - ECABG(first_piece, second_piece, i, 'R')
+            left = 1.5 * epxl(first_piece, i, columns - 1, 'D') - 1.5 * epxl(second_piece, i, 0, 'D') - 0.5 * epxl(first_piece, i, columns - 2, 'D')   + 0.5 * epxl(second_piece, i, 1, 'D')
+            # left = CSDG(first_piece, second_piece, i, 'R') - ECABG(first_piece, second_piece, i, 'R')
             right = left.T
             res.append(np.dot(np.dot(left, v), right))
     elif position == 'T':
         v = get_VGiL_inversion(first_piece, 'T')
         for i in range(columns):
-            left = CSDG(first_piece, second_piece, i, 'T') - ECABG(first_piece, second_piece, i, 'T')
+            left = 1.5 * epxl(second_piece, 0, i, 'H') - 1.5 * epxl(first_piece, columns - 1, i, 'H') + 0.5 * epxl(first_piece, columns - 2, i, 'H') - 0.5 * epxl(second_piece, 1, i, 'H')
+            # left = CSDG(first_piece, second_piece, i, 'T') - ECABG(first_piece, second_piece, i, 'T')
             right = left.T
             res.append(np.dot(np.dot(left, v), right))
     elif position == 'D':
         v = get_VGiL_inversion(second_piece, 'D')
         for i in range(columns):
-            left = CSDG(first_piece, second_piece, i, 'D') - ECABG(first_piece, second_piece, i, 'D')
+            left = 1.5 * epxl(first_piece, columns - 1, i, 'H') - 1.5 * epxl(second_piece, 0, i, 'H')  - 0.5 * epxl(first_piece, columns - 2, i, 'H') + 0.5 * epxl(second_piece, 1, i, 'H')
+            # left = CSDG(first_piece, second_piece, i, 'D') - ECABG(first_piece, second_piece, i, 'D')
             right = left.T
             res.append(np.dot(np.dot(left, v), right))
-    return np.sum((np.array(res)))
+    return np.sum((np.array(res))) / 9
 
 
 def get_ViL_inversion(*args):
@@ -139,30 +143,36 @@ def D(first_piece, second_piece, position):
         # size = 3 * 3
         v = get_ViL_inversion(first_piece, 'L')
         for i in range(rows):
-            # size = 1 * 3
-            left = CSD(first_piece, second_piece, i, 'L') - ECAB(first_piece, second_piece, i, 'L')
-            # size = 3 * 1
-            right = left.T
-            res.append(np.dot(np.dot(left, v), right))
+            left = 1.5 * second_piece[i, 0, :] - 1.5 * first_piece[i, columns - 1, :] + 0.5 * first_piece[i, columns - 2, :] - 0.5 * second_piece[i, 1, :]
+            # left = CSD(first_piece, second_piece, i, 'L') - ECAB(first_piece, second_piece, i, 'L')
+            # right = left.T
+            # res.append(np.dot(np.dot(left, v), right))
+            res.append(np.power(left, 2))
     elif position == 'R':
         v = get_ViL_inversion(second_piece, 'R')
         for i in range(rows):
-            left = CSD(first_piece, second_piece, i, 'R') - ECAB(first_piece, second_piece, i, 'R')
-            right = left.T
-            res.append(np.dot(np.dot(left, v), right))
+            left = 1.5 * first_piece[i, columns - 1, :] - 1.5 * second_piece[i, 0, :] - 0.5 * first_piece[i, columns - 2, :] + 0.5 * second_piece[i, 1, :]
+            # left = CSD(first_piece, second_piece, i, 'R') - ECAB(first_piece, second_piece, i, 'R')
+            # right = left.T
+            # res.append(np.dot(np.dot(left, v), right))
+            res.append(np.power(left, 2))
     elif position == 'T':
         v = get_ViL_inversion(first_piece, 'T')
         for i in range(columns):
-            left = CSD(first_piece, second_piece, i, 'T') - ECAB(first_piece, second_piece, i, 'T')
-            right = left.T
-            res.append(np.dot(np.dot(left, v), right))
+            left = 1.5 * second_piece[0, i, :] - 1.5 * first_piece[columns - 1, i, :] + 0.5 * first_piece[columns - 2, i, :] - 0.5 * second_piece[1, i, :]
+            # left = CSD(first_piece, second_piece, i, 'T') - ECAB(first_piece, second_piece, i, 'T')
+            # right = left.T
+            # res.append(np.dot(np.dot(left, v), right))
+            res.append(np.power(left, 2))
     elif position == 'D':
         v = get_ViL_inversion(second_piece, 'D')
         for i in range(rows):
-            left = CSD(first_piece, second_piece, i, 'D') - ECAB(first_piece, second_piece, i, 'D')
-            right = left.T
-            res.append(np.dot(np.dot(left, v), right))
-    return np.sum(np.array(res))
+            left = 1.5 * first_piece[columns - 1, i, :] - 1.5 * second_piece[0, i, :] - 0.5 * first_piece[columns - 2, i, :] + 0.5 * second_piece[1, i, :]
+            # left = CSD(first_piece, second_piece, i, 'D') - ECAB(first_piece, second_piece, i, 'D')
+            # right = left.T
+            # res.append(np.dot(np.dot(left, v), right))
+            res.append(np.power(left, 2))
+    return np.sum(np.array(res)) / rows
 
 
 def CSD(first_piece, second_piece, s, position):
@@ -287,9 +297,19 @@ def VGiL(piece, position):
     result[:, -1] = [0, 0, 1]
     return result
 
+epxl_dict = {}
 
-def epxl(piece, x, y, position):
+def epxl(* args):
+    if args in epxl_dict:
+        return epxl_dict[args]
+    piece = args[0]
+    x = args[1]
+    y = args[2]
+    position = args[3]
+    v = None
     if position == 'D':
-        return piece[x, y, :] - piece[x - 1, y, :]
+        v = piece[x, y, :] - piece[x - 1, y, :]
     elif position == 'H':
-        return piece[x, y, :] - piece[x, y - 1, :]
+        v = piece[x, y, :] - piece[x, y - 1, :]
+    epxl_dict[args] = v
+    return v
