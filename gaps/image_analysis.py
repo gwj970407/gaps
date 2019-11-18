@@ -32,15 +32,23 @@ class ImageAnalysis(object):
                 "D": [],
                 "L": []
             }
+            cls.best_match_d = -1
+            cls.best_match_mgc = -1
 
         def update_best_match_table(first_piece, second_piece):
             # 保存每次计算出来的两个碎片的相似度
             # 记录每两块之间的相似度，加入到列表之中 (用颜色空间计算两个edge的距离)
             measure = dissimilarity_measure(first_piece, second_piece, orientation)
+            if (measure[0] > cls.best_match_d):
+                cls.best_match_d = measure[0]
+            if (measure[1] > cls.best_match_mgc):
+                cls.best_match_mgc = measure[1]
             # 保存每对的相似度
             cls.put_dissimilarity((first_piece.id, second_piece.id), orientation, measure)
             cls.best_match_table[second_piece.id][orientation[0]].append((first_piece.id, measure))
             cls.best_match_table[first_piece.id][orientation[1]].append((second_piece.id, measure))
+
+
 
         # Calculate dissimilarity measures and best matches for each piece.计算相似度
         iterations = len(pieces) - 1
@@ -51,6 +59,22 @@ class ImageAnalysis(object):
                 for orientation in ["LR", "TD"]:
                     update_best_match_table(pieces[first], pieces[second])
                     update_best_match_table(pieces[second], pieces[first])
+
+        # normalize d_mgc
+        for piece in pieces:
+            for orientation in ["T", "L", "R", "D"]:
+                d_mgc = cls.best_match_table[piece.id][orientation]
+                new_value = []
+                for piece_id, measure in d_mgc:
+                    new_value.append((piece_id, measure[0] / cls.best_match_d + measure[1] / cls.best_match_mgc))
+                cls.best_match_table[piece.id][orientation] = new_value
+
+        # normalize dissimilarity
+        for id1, id2 in cls.dissimilarity_measures:
+            for orientation in cls.dissimilarity_measures[(id1, id2)]:
+                v = cls.dissimilarity_measures[(id1, id2)][orientation]
+                new_value = v[0] / cls.best_match_d + v[1] / cls.best_match_mgc
+                cls.dissimilarity_measures[(id1, id2)][orientation] = new_value
 
         for piece in pieces:
             for orientation in ["T", "L", "R", "D"]:
@@ -97,3 +121,8 @@ class ImageAnalysis(object):
     def best_match(cls, piece, orientation):
         """"Returns best match piece for given piece and orientation"""
         return cls.best_match_table[piece][orientation][0][0]
+
+    @classmethod
+    def in_range(cls, source_id, oritation, target_id):
+        v = cls.best_match_table[source_id][oritation]
+        return target_id in (v[0][0], v[1][0], v[2][0])

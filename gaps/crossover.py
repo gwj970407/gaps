@@ -36,7 +36,8 @@ class Crossover(object):
             index = (row - self._min_row) * self._child_columns + (column - self._min_column)
             pieces[index] = self._parents[0].piece_by_id(piece)
 
-        return Individual(pieces, self._child_rows, self._child_columns, shuffle=False)
+        individual = Individual(pieces, self._child_rows, self._child_columns, shuffle=False)
+        return individual
 
     def run(self):
         self._initialize_kernel()
@@ -100,9 +101,8 @@ class Crossover(object):
         first_parent_edge = first_parent.edge(piece_id, orientation)
         second_parent_edge = second_parent.edge(piece_id, orientation)
 
-        if first_parent_edge != None and second_parent_edge != None \
-                and first_parent_edge == second_parent_edge and \
-                ImageAnalysis.best_match(first_parent_edge, orientation) == ImageAnalysis.best_match(second_parent_edge, orientation):
+        if first_parent_edge is not None and second_parent_edge is not None \
+                and first_parent_edge == second_parent_edge:
             return first_parent_edge
 
     def _get_buddy_piece(self, piece_id, orientation):

@@ -68,8 +68,10 @@ def dissimilarity_measure(first_piece, second_piece, orientation="LR"):
     if orientation == "LR":
         # FIXME add weight to G
         # 如果是左右关系，则取左边的最右一列的三个通道减去右边的最左一列的三个通道
-        color_difference = D(first_piece, second_piece, 'L') + D(first_piece, second_piece, 'R') \
-                           + DG(first_piece, second_piece, 'L') + DG(first_piece, second_piece, 'R')
+        color_difference = D(first_piece, second_piece, 'L') + D(first_piece, second_piece, 'R') ,\
+                           DG(first_piece, second_piece, 'L') + DG(first_piece, second_piece, 'R')
+        # color_difference = D(first_piece, second_piece, 'L') + D(first_piece, second_piece, 'R') \
+        #                    + DG(first_piece, second_piece, 'L') + DG(first_piece, second_piece, 'R')
         # v = D(first_piece, second_piece, 'L') + D(first_piece, second_piece, 'R')
         # v2 = DG(first_piece, second_piece, 'L') + DG(first_piece, second_piece, 'R')
         # print("v= %s", v)
@@ -80,8 +82,8 @@ def dissimilarity_measure(first_piece, second_piece, orientation="LR"):
     # | D |
     if orientation == "TD":
         # 如果是上下关系，则取上边的最下一行的三个通道减去下边的最上一列的三个通道
-        color_difference = D(first_piece, second_piece, 'T') + D(first_piece, second_piece, 'D') \
-                           + DG(first_piece, second_piece, 'T') + DG(first_piece, second_piece, 'D')
+        color_difference = D(first_piece, second_piece, 'T') + D(first_piece, second_piece, 'D') ,\
+                           DG(first_piece, second_piece, 'T') + DG(first_piece, second_piece, 'D')
 
     return color_difference
 
@@ -125,7 +127,7 @@ def DG(first_piece, second_piece, position):
             # left = CSDG(first_piece, second_piece, i, 'D') - ECABG(first_piece, second_piece, i, 'D')
             right = left.T
             res.append(np.dot(np.dot(left, v), right))
-    return np.sum((np.array(res))) / 9
+    return np.sum((np.array(res))) / 3
 
 
 def get_ViL_inversion(*args):

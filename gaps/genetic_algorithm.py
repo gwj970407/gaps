@@ -57,23 +57,43 @@ class GeneticAlgorithm(object):
                 crossover = Crossover(first_parent, second_parent)
                 crossover.run()
                 child = crossover.child()
+                # child.mutate()
                 new_population.append(child)
 
             # 从上一代中选出适应度最高的一个
             fittest = self._best_individual()
+            fittest.mutate()
 
-            image = fittest.to_image()
-            rightImage = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
-            cv2.imwrite("temp_image_" + str(generation) + ".jpg", rightImage)
+            print("old_fittest : ", fittest.fitness, end="")
+
+            # image = fittest.to_image()
+            # rightImage = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
+            # cv2.imwrite("temp_image_" + str(generation) + ".jpg", rightImage)
             best_adjoin = fittest.best_adjoin(self._piece_size)
             rightImage = cv2.cvtColor(best_adjoin, cv2.COLOR_RGB2BGR)
             cv2.imwrite("temp_image_best_adjoin_" + str(generation) + ".jpg", rightImage)
+            penalize = fittest.penalize()
+            print("  new_fittest : ", fittest.fitness)
+            # rightImage = cv2.cvtColor(penalize, cv2.COLOR_RGB2BGR)
+            # cv2.imwrite("temp_image_penalize_" + str(generation) + ".jpg", rightImage)
 
             # 如果上一代最佳比历史最佳好，则termination_counter += 1,否则替换
             if fittest.fitness <= best_fitness_score:
                 termination_counter += 1
             else:
                 best_fitness_score = fittest.fitness
+                termination_counter = 0
+
+            # if termination_counter == self.TERMINATION_THRESHOLD // 2:
+            #     predicate = Individual(fittest.pieces, fittest.rows, fittest.columns, shuffle=False)
+            #     predicate.penalize_image = fittest.penalize_image
+            #     predicate.shuffle_assembling()
+            #     print("predicate_fitness : %s ", str(predicate.fitness))
+            #     for each in range(len(new_population)):
+            #         if new_population[each].fitness < predicate.fitness:
+            #             new_population[each] = predicate
+            #             break
+
 
             # 如果连续十代都没有更优子代，则退出
             if termination_counter == self.TERMINATION_THRESHOLD:
