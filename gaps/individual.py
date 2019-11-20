@@ -342,7 +342,7 @@ class Individual(object):
     @staticmethod
     def get_value(dissimilarity_list, candidate):
         if candidate == -1:
-            return 1
+            return 2
         for i in range(len(dissimilarity_list)):
             if dissimilarity_list[i][0] == candidate:
                 return dissimilarity_list[i][1]
@@ -410,11 +410,11 @@ class Individual(object):
         for row in range(0, rows):
             for col in range(0, cols):
                 if pieces[row][col].id == -1 and (row != r or col != c):
-                    self.pieces[row * rows + col], self.pieces[r * rows + c] = self.pieces[r * rows + c], self.pieces[
-                        row * rows + col]
+                    self.pieces[row * cols + col], self.pieces[r * cols + c] = self.pieces[r * cols + c], self.pieces[
+                        row * cols + col]
                     new_fitness = self.fitness
-                    self.pieces[row * rows + col], self.pieces[r * rows + c] = self.pieces[r * rows + c], self.pieces[
-                        row * rows + col]
+                    self.pieces[row * cols + col], self.pieces[r * cols + c] = self.pieces[r * cols + c], self.pieces[
+                        row * cols + col]
                     if new_fitness > best_fitness:
                         best_row = row
                         best_col = col
@@ -422,8 +422,8 @@ class Individual(object):
                     # else:
                     self.clear_fitness()
         if best_row is not None and best_col is not None:
-            self.pieces[best_row * rows + best_col], self.pieces[r * rows + c] = self.pieces[r * rows + c], self.pieces[
-                best_row * rows + best_col]
+            self.pieces[best_row * cols + best_col], self.pieces[r * cols + c] = self.pieces[r * cols + c], self.pieces[
+                best_row * cols + best_col]
         # print("old_fitness : %s, new_fitness : %s", (old_fitness, best_fitness))
 
     def like_best_match(self, row, col):
@@ -446,13 +446,13 @@ class Individual(object):
         if col == 0 or col == self.columns - 1:
             return
         count = 0
-        left = self.pieces[row * self.rows + col - 1]
-        right = self.pieces[row * self.rows + col + 1]
-        top = self.pieces[(row - 1) * self.rows + col]
-        bottom = self.pieces[(row + 1) * self.rows + col]
+        left = self.pieces[row * self.columns + col - 1]
+        right = self.pieces[row * self.columns + col + 1]
+        top = self.pieces[(row - 1) * self.columns + col]
+        bottom = self.pieces[(row + 1) * self.columns + col]
 
         print("\n condidate position: row %s, col %s", (row, col), end="")
-        cur_id = self.pieces[row * self.rows + col].id
+        cur_id = self.pieces[row * self.columns + col].id
         if ImageAnalysis.best_match_table[left.id]["R"][0][0] == cur_id:
             count += 1
         if ImageAnalysis.best_match_table[right.id]["L"][0][0] == cur_id:
@@ -512,26 +512,21 @@ class Individual(object):
 
     def shuffle_assembling(self):
 
-        for r in range(self.rows):
-            for c in range(self.columns):
-                print(self.penalize_image[r][c].id, end=" ")
-            print("")
-
         # {position: id}
         uncompleted_piece = {}
         for r in range(self.rows):
             for c in range(self.columns):
                 if self.penalize_image[r][c].id == -1:
-                    uncompleted_piece[(r, c)] = self.pieces[r * self.rows + c].id
+                    uncompleted_piece[(r, c)] = self.pieces[r * self.columns + c].id
 
-        print("uncompleted_piece", uncompleted_piece)
+        candidate_piece = uncompleted_piece.copy()
+
         # check_four_piece_around position
         four_piece_around = []
         for (k, v) in uncompleted_piece.items():
             if self.is_around_four(k[0], k[1]):
                 four_piece_around.append(k)
-        self.handle_four_piece_around(four_piece_around, uncompleted_piece)
-
+        self.handle_four_piece_around(four_piece_around, uncompleted_piece, candidate_piece)
         while True:
             three_piece_around = []
             for (k, v) in uncompleted_piece.items():
@@ -539,19 +534,14 @@ class Individual(object):
                     three_piece_around.append(k)
             if len(three_piece_around) == 0:
                 break
-            self.handle_three_piece_around(three_piece_around, uncompleted_piece)
+            self.handle_three_piece_around(three_piece_around, uncompleted_piece, candidate_piece)
+        self.handle_uncompleted_piece(uncompleted_piece, candidate_piece)
 
-        self.handle_uncompleted_piece(uncompleted_piece)
-
-        for r in range(self.rows):
-            for c in range(self.columns):
-                print(self.penalize_image[r][c].id, end=" ")
-            print("")
         # 回溯
         for r in range(self.rows):
             for c in range(self.columns):
                 if self.penalize_image[r][c].id != -1:
-                    self.pieces[r * self.rows + c] = self.penalize_image[r][c]
+                    self.pieces[r * self.columns + c] = self.penalize_image[r][c]
 
     def is_around_four(self, r, c):
         if r == 0 or r == self.rows - 1 or c == 0 or c == self.columns - 1:
@@ -560,25 +550,25 @@ class Individual(object):
         return penalize_image[r][c - 1].id is not -1 and penalize_image[r][c + 1].id is not -1 \
                and penalize_image[r - 1][c].id is not -1 and penalize_image[r + 1][c].id is not -1
 
-    def handle_four_piece_around(self, four_piece_around, uncompleted_piece):
+    def handle_four_piece_around(self, four_piece_around, uncompleted_piece, candidate_piece):
+
         while len(four_piece_around) != 0:
-            ele = four_piece_around.pop()
             best_fitness = float("inf")
             best_position = None
-            for position, id in uncompleted_piece.items():
-                fitness = Individual.get_value(ImageAnalysis.best_match_table[id]["L"],
-                                               self.penalize_image[ele[0]][ele[1] - 1].id) \
-                          + Individual.get_value(ImageAnalysis.best_match_table[id]["R"],
-                                                 self.penalize_image[ele[0]][ele[1] + 1].id) \
-                          + Individual.get_value(ImageAnalysis.best_match_table[id]["T"],
-                                                 self.penalize_image[ele[0] + 1][ele[1]].id) \
-                          + Individual.get_value(ImageAnalysis.best_match_table[id]["D"],
-                                                 self.penalize_image[ele[0] - 1][ele[1]].id)
-                if fitness < best_fitness:
-                    best_fitness = fitness
-                    best_position = position
-            self.penalize_image[ele[0]][ele[1]] = self.pieces[best_position[0] * self.rows + best_position[1]]
-            uncompleted_piece.pop(best_position)
+            best_k = None
+            for k in four_piece_around:
+                for position, id in candidate_piece.items():
+                    fitness = self.calculate_fitness(k, id)
+
+                    if fitness < best_fitness:
+                        best_fitness = fitness
+                        best_k = k
+                        best_position = position
+            self.penalize_image[best_k[0]][best_k[1]] = self.pieces[best_position[0] * self.columns + best_position[1]]
+            print("four piece %s, %s -> %s, %s", (best_position[0], best_position[1], best_k[0], best_k[1]))
+            uncompleted_piece.pop(best_k)
+            four_piece_around.remove(best_k)
+            candidate_piece.pop(best_position)
 
     def is_around_three(self, r, c):
         if r == 0:
@@ -606,7 +596,6 @@ class Individual(object):
         count = 0
         if self.penalize_image[r + 1][c].id != -1:
             count += 1
-
         if self.penalize_image[r][c - 1].id != -1:
             count += 1
         if self.penalize_image[r - 1][c].id != -1:
@@ -617,66 +606,100 @@ class Individual(object):
             return True
         return False
 
-    def handle_three_piece_around(self, three_piece_around, uncompleted_piece):
+    def handle_three_piece_around(self, three_piece_around, uncompleted_piece, candidate_piece):
+
         while len(three_piece_around) != 0:
-            ele = three_piece_around.pop()
             best_fitness = float("inf")
             best_position = None
-            for position, id in uncompleted_piece.items():
-                fitness = self.calculate_fitness(ele, id)
-                if fitness < best_fitness:
-                    best_fitness = fitness
-                    best_position = position
-            self.penalize_image[ele[0]][ele[1]] = self.pieces[best_position[0] * self.rows + best_position[1]]
-            uncompleted_piece.pop(best_position)
+            best_k = None
+            for k in three_piece_around:
+                for position, id in candidate_piece.items():
+                    fitness = self.calculate_fitness(k, id)
+                    if fitness < best_fitness:
+                        best_fitness = fitness
+                        best_k = k
+                        best_position = position
+            self.penalize_image[best_k[0]][best_k[1]] = self.pieces[best_position[0] * self.columns + best_position[1]]
+            print("three piece %s, %s -> %s, %s", (best_position[0], best_position[1], best_k[0], best_k[1]))
+            uncompleted_piece.pop(best_k)
+            three_piece_around.remove(best_k)
+            candidate_piece.pop(best_position)
 
     def calculate_fitness(self, position, id):
         r = position[0]
         c = position[1]
         if r == 0:
             if c == 0:
-                return 2 + Individual.get_value(ImageAnalysis.best_match_table[id]["R"], self.penalize_image[position[0]][position[1] + 1].id) \
-                    + Individual.get_value(ImageAnalysis.best_match_table[id]["D"], self.penalize_image[position[0] + 1][position[1]].id)
+                return 4 + Individual.get_value(ImageAnalysis.best_match_table[id]["R"],
+                                                self.penalize_image[position[0]][position[1] + 1].id) \
+                       + Individual.get_value(ImageAnalysis.best_match_table[id]["D"],
+                                              self.penalize_image[position[0] + 1][position[1]].id)
             if c == self.columns - 1:
-                return 2 + Individual.get_value(ImageAnalysis.best_match_table[id]["L"], self.penalize_image[position[0]][position[1] - 1].id) \
-                       + Individual.get_value(ImageAnalysis.best_match_table[id]["D"], self.penalize_image[position[0] + 1][position[1]].id)
+                return 4 + Individual.get_value(ImageAnalysis.best_match_table[id]["L"],
+                                                self.penalize_image[position[0]][position[1] - 1].id) \
+                       + Individual.get_value(ImageAnalysis.best_match_table[id]["D"],
+                                              self.penalize_image[position[0] + 1][position[1]].id)
 
-            return 1 + Individual.get_value(ImageAnalysis.best_match_table[id]["L"], self.penalize_image[position[0]][position[1] - 1].id) \
-                    + Individual.get_value(ImageAnalysis.best_match_table[id]["R"], self.penalize_image[position[0]][position[1] + 1].id) \
-                    + Individual.get_value(ImageAnalysis.best_match_table[id]["D"], self.penalize_image[position[0] + 1][position[1]].id)
+            return 2 + Individual.get_value(ImageAnalysis.best_match_table[id]["L"],
+                                            self.penalize_image[position[0]][position[1] - 1].id) \
+                   + Individual.get_value(ImageAnalysis.best_match_table[id]["R"],
+                                          self.penalize_image[position[0]][position[1] + 1].id) \
+                   + Individual.get_value(ImageAnalysis.best_match_table[id]["D"],
+                                          self.penalize_image[position[0] + 1][position[1]].id)
         if r == self.rows - 1:
             if c == 0:
-                return 2 + Individual.get_value(ImageAnalysis.best_match_table[id]["R"], self.penalize_image[position[0]][position[1] + 1].id) \
-                    + Individual.get_value(ImageAnalysis.best_match_table[id]["T"], self.penalize_image[position[0] - 1][position[1]].id)
+                return 4 + Individual.get_value(ImageAnalysis.best_match_table[id]["R"],
+                                                self.penalize_image[position[0]][position[1] + 1].id) \
+                       + Individual.get_value(ImageAnalysis.best_match_table[id]["T"],
+                                              self.penalize_image[position[0] - 1][position[1]].id)
             if c == self.columns - 1:
-                return 2 + Individual.get_value(ImageAnalysis.best_match_table[id]["L"], self.penalize_image[position[0]][position[1] - 1].id) \
-                       + Individual.get_value(ImageAnalysis.best_match_table[id]["T"], self.penalize_image[position[0] - 1][position[1]].id)
+                return 4 + Individual.get_value(ImageAnalysis.best_match_table[id]["L"],
+                                                self.penalize_image[position[0]][position[1] - 1].id) \
+                       + Individual.get_value(ImageAnalysis.best_match_table[id]["T"],
+                                              self.penalize_image[position[0] - 1][position[1]].id)
 
-            return 1 + Individual.get_value(ImageAnalysis.best_match_table[id]["L"], self.penalize_image[position[0]][position[1] - 1].id) \
-                    + Individual.get_value(ImageAnalysis.best_match_table[id]["R"], self.penalize_image[position[0]][position[1] + 1].id) \
-                    + Individual.get_value(ImageAnalysis.best_match_table[id]["T"], self.penalize_image[position[0] - 1][position[1]].id)
+            return 2 + Individual.get_value(ImageAnalysis.best_match_table[id]["L"],
+                                            self.penalize_image[position[0]][position[1] - 1].id) \
+                   + Individual.get_value(ImageAnalysis.best_match_table[id]["R"],
+                                          self.penalize_image[position[0]][position[1] + 1].id) \
+                   + Individual.get_value(ImageAnalysis.best_match_table[id]["T"],
+                                          self.penalize_image[position[0] - 1][position[1]].id)
         if c == 0:
-            return 1 + Individual.get_value(ImageAnalysis.best_match_table[id]["R"], self.penalize_image[position[0]][position[1] + 1].id) \
-                    + Individual.get_value(ImageAnalysis.best_match_table[id]["T"], self.penalize_image[position[0] + 1][position[1]].id) \
-                    + Individual.get_value(ImageAnalysis.best_match_table[id]["D"], self.penalize_image[position[0] - 1][position[1]].id)
+            return 2 + Individual.get_value(ImageAnalysis.best_match_table[id]["R"],
+                                            self.penalize_image[position[0]][position[1] + 1].id) \
+                   + Individual.get_value(ImageAnalysis.best_match_table[id]["T"],
+                                          self.penalize_image[position[0] + 1][position[1]].id) \
+                   + Individual.get_value(ImageAnalysis.best_match_table[id]["D"],
+                                          self.penalize_image[position[0] - 1][position[1]].id)
         if c == self.columns - 1:
-            return 1 + Individual.get_value(ImageAnalysis.best_match_table[id]["L"], self.penalize_image[position[0]][position[1] - 1].id) \
-                    + Individual.get_value(ImageAnalysis.best_match_table[id]["T"], self.penalize_image[position[0] + 1][position[1]].id) \
-                    + Individual.get_value(ImageAnalysis.best_match_table[id]["D"], self.penalize_image[position[0] - 1][position[1]].id)
-        return Individual.get_value(ImageAnalysis.best_match_table[id]["L"], self.penalize_image[position[0]][position[1] - 1].id) \
-                + Individual.get_value(ImageAnalysis.best_match_table[id]["R"], self.penalize_image[position[0]][position[1] + 1].id) \
-                + Individual.get_value(ImageAnalysis.best_match_table[id]["T"], self.penalize_image[position[0] + 1][position[1]].id) \
-                + Individual.get_value(ImageAnalysis.best_match_table[id]["D"], self.penalize_image[position[0] - 1][position[1]].id)
+            return 2 + Individual.get_value(ImageAnalysis.best_match_table[id]["L"],
+                                            self.penalize_image[position[0]][position[1] - 1].id) \
+                   + Individual.get_value(ImageAnalysis.best_match_table[id]["T"],
+                                          self.penalize_image[position[0] + 1][position[1]].id) \
+                   + Individual.get_value(ImageAnalysis.best_match_table[id]["D"],
+                                          self.penalize_image[position[0] - 1][position[1]].id)
+        return Individual.get_value(ImageAnalysis.best_match_table[id]["L"],
+                                    self.penalize_image[position[0]][position[1] - 1].id) \
+               + Individual.get_value(ImageAnalysis.best_match_table[id]["R"],
+                                      self.penalize_image[position[0]][position[1] + 1].id) \
+               + Individual.get_value(ImageAnalysis.best_match_table[id]["T"],
+                                      self.penalize_image[position[0] + 1][position[1]].id) \
+               + Individual.get_value(ImageAnalysis.best_match_table[id]["D"],
+                                      self.penalize_image[position[0] - 1][position[1]].id)
 
-    def handle_uncompleted_piece(self, uncompleted_piece):
-        duplicate = uncompleted_piece.copy()
-        for k, v in duplicate.items():
+    def handle_uncompleted_piece(self, uncompleted_piece, candidate_piece):
+        while len(uncompleted_piece) != 0:
+            duplicate = uncompleted_piece.copy()
             best_fitness = float("inf")
             best_position = None
-            for position, id in uncompleted_piece.items():
-                fitness = self.calculate_fitness(position, id)
-                if fitness < best_fitness:
-                    best_fitness = fitness
-                    best_position = position
-            self.penalize_image[k[0]][k[1]] = self.pieces[best_position[0] * self.rows + best_position[1]]
-            uncompleted_piece.pop(best_position)
+            best_k = None
+            for k, v in duplicate.items():
+                for position, id in candidate_piece.items():
+                    fitness = self.calculate_fitness(position, id)
+                    if fitness < best_fitness:
+                        best_k = k
+                        best_fitness = fitness
+                        best_position = position
+            self.penalize_image[best_k[0]][best_k[1]] = self.pieces[best_position[0] * self.columns + best_position[1]]
+            uncompleted_piece.pop(best_k)
+            candidate_piece.pop(best_position)

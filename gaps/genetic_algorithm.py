@@ -84,15 +84,19 @@ class GeneticAlgorithm(object):
                 best_fitness_score = fittest.fitness
                 termination_counter = 0
 
-            # if termination_counter == self.TERMINATION_THRESHOLD // 2:
-            #     predicate = Individual(fittest.pieces, fittest.rows, fittest.columns, shuffle=False)
-            #     predicate.penalize_image = fittest.penalize_image
-            #     predicate.shuffle_assembling()
-            #     print("predicate_fitness : %s ", str(predicate.fitness))
-            #     for each in range(len(new_population)):
-            #         if new_population[each].fitness < predicate.fitness:
-            #             new_population[each] = predicate
-            #             break
+            if termination_counter == self.TERMINATION_THRESHOLD // 2:
+                predicate = Individual(fittest.pieces, fittest.rows, fittest.columns, shuffle=False)
+                predicate.penalize_image = fittest.penalize_image
+                predicate.shuffle_assembling()
+                print("predicate_fitness : %s ", str(predicate.fitness))
+                predicate.to_image()
+                image = predicate.to_image()
+                rightImage = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
+                cv2.imwrite("predicate_image_" + str(generation) + ".jpg", rightImage)
+                for each in range(len(new_population)):
+                    if new_population[each].fitness < predicate.fitness:
+                        new_population[each] = predicate
+                        break
 
 
             # 如果连续十代都没有更优子代，则退出
