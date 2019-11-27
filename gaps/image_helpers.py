@@ -31,7 +31,12 @@ def flatten_image(image, piece_size, indexed=False):
             pieces.append(piece)
 
     if indexed:
-        pieces = [Piece(value, index) for index, value in enumerate(pieces)]
+        image = []
+        with open("../bin/image_position.txt", "r") as f:
+            for line in f:
+                image.extend(line.strip().split(" "))
+
+        pieces = [Piece(value, int(image[index])) for index, value in enumerate(pieces)]
 
     return pieces, rows, columns
 

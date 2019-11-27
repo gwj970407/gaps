@@ -28,4 +28,4 @@ class Plot(object):
         plt.draw()
 
         # Give pyplot 0.05s to draw image
-        plt.pause(0.05)
+        plt.pause(0.5)
