@@ -565,7 +565,7 @@ class Individual(object):
                         best_k = k
                         best_position = position
             self.penalize_image[best_k[0]][best_k[1]] = self.pieces[best_position[0] * self.columns + best_position[1]]
-            print("four piece %s, %s -> %s, %s", (best_position[0], best_position[1], best_k[0], best_k[1]))
+            print("four piece %s, %s -> %s, %s , best_fitness %s", (best_position[0], best_position[1], best_k[0], best_k[1], best_fitness))
             uncompleted_piece.pop(best_k)
             four_piece_around.remove(best_k)
             candidate_piece.pop(best_position)
@@ -620,7 +620,7 @@ class Individual(object):
                         best_k = k
                         best_position = position
             self.penalize_image[best_k[0]][best_k[1]] = self.pieces[best_position[0] * self.columns + best_position[1]]
-            print("three piece %s, %s -> %s, %s", (best_position[0], best_position[1], best_k[0], best_k[1]))
+            print("three piece %s, %s -> %s, %s , best_fitness %s", (best_position[0], best_position[1], best_k[0], best_k[1], best_fitness))
             uncompleted_piece.pop(best_k)
             three_piece_around.remove(best_k)
             candidate_piece.pop(best_position)
@@ -701,5 +701,6 @@ class Individual(object):
                         best_fitness = fitness
                         best_position = position
             self.penalize_image[best_k[0]][best_k[1]] = self.pieces[best_position[0] * self.columns + best_position[1]]
+            print("handle_uncompleted_piece %s, %s -> %s, %s , best_fitness %s", (best_position[0], best_position[1], best_k[0], best_k[1], best_fitness))
             uncompleted_piece.pop(best_k)
             candidate_piece.pop(best_position)

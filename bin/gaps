@@ -12,6 +12,9 @@ import argparse
 import matplotlib.pyplot as plt
 import cv2
 from time import time
+
+from gaps.piece import Piece
+
 from gaps.genetic_algorithm import GeneticAlgorithm
 from gaps.size_detector import SizeDetector
 from gaps.plot import Plot
@@ -26,6 +29,17 @@ def show_image(img, title):
     plt.show()
 
 
+def save_piece_position(pieces, rows, columns):
+    if not isinstance(pieces[0], Piece):
+        pass
+    with open("solution_position.txt", "w") as f:
+        for i in range(rows):
+            id_list = []
+            for j in range(columns):
+                id_list.append(str(pieces[i * columns + j].id))
+            f.write(str.join(" ", id_list) + "\n")
+
+
 def parse_arguments():
     """Parses input arguments required to solve puzzle"""
     parser = argparse.ArgumentParser(description="A Genetic based solver for jigsaw puzzles")
@@ -36,6 +50,7 @@ def parse_arguments():
     parser.add_argument("--verbose", action="store_true", help="Show best individual after each generation.")
     parser.add_argument("--save", action="store_true", help="Save puzzle result as image.")
     return parser.parse_args()
+
 
 if __name__ == "__main__":
     args = parse_arguments()
@@ -68,6 +83,7 @@ if __name__ == "__main__":
 
     print("\n=== Done in {0:.3f} s".format(end - start))
 
+    save_piece_position(solution.pieces, solution.rows, solution.columns)
     solution_image = solution.to_image()
 
     solution_image_name = args.image.split(".")[0] + "_solution_" + str(GENERATIONS) + "_" + str(POPULATION) + ".jpg"

@@ -15,6 +15,7 @@ import argparse
 import os.path
 import numpy as np
 import cv2
+from gaps.piece import Piece
 
 from gaps import image_helpers
 
@@ -28,19 +29,35 @@ COLOR_STRING = {
 }
 
 
+def save_piece_position(pieces, rows, columns):
+    if not isinstance(pieces[0], Piece):
+        pass
+    with open("image_position.txt", "w") as f:
+        for i in range(rows):
+            id_list = []
+            for j in range(columns):
+                id_list.append(str(pieces[i * columns + j].id))
+            f.write(str.join(" ", id_list) + "\n")
+
+
+
+
+
 def create_puzzle(image_path, output_path, piece_size):
     """Creates jigsaw puzzle from input image"""
     image = cv2.imread(image_path)
-    pieces, rows, columns = image_helpers.flatten_image(image, piece_size)
+    pieces, rows, columns = image_helpers.flatten_image(image, piece_size, True)
 
     # Create puzzle by stacking pieces
-    puzzle = image_helpers.assemble_image(pieces, rows, columns)
+    puzzle = image_helpers.assemble_image(pieces, rows, columns, True)
     cv2.imwrite(str(output_path).replace(".jpg", "_format.jpg"), puzzle)
     # Randomize pieces in order to make puzzle
     np.random.shuffle(pieces)
 
     # Create puzzle by stacking pieces
-    puzzle = image_helpers.assemble_image(pieces, rows, columns)
+    puzzle = image_helpers.assemble_image(pieces, rows, columns, True)
+
+    save_piece_position(pieces, rows, columns)
 
     cv2.imwrite(output_path, puzzle)
     print_messages(["Puzzle created with {} pieces".format(len(pieces))])
@@ -48,7 +65,6 @@ def create_puzzle(image_path, output_path, piece_size):
 
 def print_messages(messages, level="SUCCESS"):
     """Prints given messages as colored strings"""
-    print
     for message in messages:
         print(COLOR_STRING[level].format(message))
 
@@ -91,6 +107,7 @@ def parse_arguments():
     parser.add_argument("--size", type=int, default=DEFAULT_PIECE_SIZE, help=piece_size_help)
 
     return parser.parse_args()
+
 
 if __name__ == "__main__":
     ARGS = parse_arguments()

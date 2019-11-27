@@ -36,7 +36,7 @@ def flatten_image(image, piece_size, indexed=False):
     return pieces, rows, columns
 
 
-def assemble_image(pieces, rows, columns):
+def assemble_image(pieces, rows, columns, indexed=False):
     """Assembles image from pieces.
 
     Given an array of pieces and desired image dimensions, function
@@ -58,6 +58,10 @@ def assemble_image(pieces, rows, columns):
     for i in range(rows):
         horizontal_stack = []
         for j in range(columns):
-            horizontal_stack.append(pieces[i * columns + j])
+            if indexed:
+                horizontal_stack.append(pieces[i * columns + j].image)
+            else:
+                horizontal_stack.append(pieces[i * columns + j])
+
         vertical_stack.append(np.hstack(horizontal_stack))
     return np.vstack(vertical_stack).astype(np.uint8)
