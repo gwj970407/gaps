@@ -19,4 +19,4 @@ for i in range(len(image)):
         if solution[i][j] == str(i * len(solution_row) + j) :
             complete += 1
         size += 1
-print("complete %s, size %s, %s", (complete, size, complete / size))
+print("complete %s, size %s, %s" % (complete, size, complete / size))
