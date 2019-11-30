@@ -66,7 +66,6 @@ def dissimilarity_measure(first_piece, second_piece, orientation="LR"):
     # 第三维度如果是彩色图像，则为3 灰度图像和黑白图像为1
     # | L | - | R |
     if orientation == "LR":
-        # FIXME add weight to G
         # 如果是左右关系，则取左边的最右一列的三个通道减去右边的最左一列的三个通道
         color_difference = D(first_piece, second_piece, 'L') + D(first_piece, second_piece, 'R'), \
                            DG(first_piece, second_piece, 'L') + DG(first_piece, second_piece, 'R')
@@ -131,7 +130,7 @@ def DG(first_piece, second_piece, position):
             # left = CSDG(first_piece, second_piece, i, 'D') - ECABG(first_piece, second_piece, i, 'D')
             right = left.T
             res.append(np.dot(np.dot(left, v), right))
-    return np.sum((np.array(res))) / 3
+    return np.sum((np.array(res)))
 
 
 def get_ViL_inversion(*args):
@@ -147,11 +146,10 @@ def D(first_piece, second_piece, position):
     # res = []
     left = None
     if position == 'L':
+        left = second_piece[:, 0, :] - first_piece[:, columns - 1, :] + (0.5 * second_piece[:, 1, :] - 0.5 * first_piece[:, columns - 1, :])
+        # left = 1.5 * second_piece[:, 0, :] - 1.5 * first_piece[:, columns - 1, :] + 0.5 * first_piece[:, columns - 2, :] - 0.5 * second_piece[:, 1, :]
         # size = 3 * 3
         # v = get_ViL_inversion(first_piece, 'L')
-        left = 1.5 * second_piece[:, 0, :] - 1.5 * first_piece[:, columns - 1, :] + 0.5 * first_piece[:, columns - 2,
-                                                                                          :] - 0.5 * second_piece[:, 1,
-                                                                                                     :]
         # for i in range(rows):
         #     left = 1.5 * second_piece[i, 0, :] - 1.5 * first_piece[i, columns - 1, :] + 0.5 * first_piece[i, columns - 2, :] - 0.5 * second_piece[i, 1, :]
         # left = CSD(first_piece, second_piece, i, 'L') - ECAB(first_piece, second_piece, i, 'L')
@@ -159,9 +157,8 @@ def D(first_piece, second_piece, position):
         # res.append(np.dot(np.dot(left, v), right))
         # res.append(np.power(left, 2))
     elif position == 'R':
-        left = 1.5 * first_piece[:, columns - 1, :] - 1.5 * second_piece[:, 0, :] - 0.5 * first_piece[:, columns - 2,
-                                                                                          :] + 0.5 * second_piece[:, 1,
-                                                                                                     :]
+        left = first_piece[:, columns - 1, :] -  second_piece[:, 0, :] + (0.5 * first_piece[:, columns - 1, :] - 0.5 * second_piece[:, 1, :])
+        # left = 1.5 * first_piece[:, columns - 1, :] - 1.5 * second_piece[:, 0, :] - 0.5 * first_piece[:, columns - 2, :] + 0.5 * second_piece[:, 1, :]
         # v = get_ViL_inversion(second_piece, 'R')
         # for i in range(rows):
         #     left = 1.5 * first_piece[i, columns - 1, :] - 1.5 * second_piece[i, 0, :] - 0.5 * first_piece[i, columns - 2, :] + 0.5 * second_piece[i, 1, :]
@@ -170,9 +167,7 @@ def D(first_piece, second_piece, position):
         # res.append(np.dot(np.dot(left, v), right))
         # res.append(np.power(left, 2))
     elif position == 'T':
-        left = 1.5 * second_piece[0, :, :] - 1.5 * first_piece[columns - 1, :, :] + 0.5 * first_piece[columns - 2, :,
-                                                                                          :] - 0.5 * second_piece[1, :,
-                                                                                                     :]
+        left = second_piece[0, :, :] - first_piece[columns - 1, :, :] + (0.5 * second_piece[1, :, :] - 0.5 * first_piece[columns - 1, :, :])
         # v = get_ViL_inversion(first_piece, 'T')
         # for i in range(columns):
         #     left = 1.5 * second_piece[0, i, :] - 1.5 * first_piece[columns - 1, i, :] + 0.5 * first_piece[columns - 2, i, :] - 0.5 * second_piece[1, i, :]
@@ -181,9 +176,7 @@ def D(first_piece, second_piece, position):
         # res.append(np.dot(np.dot(left, v), right))
         # res.append(np.power(left, 2))
     elif position == 'D':
-        left = 1.5 * first_piece[columns - 1, :, :] - 1.5 * second_piece[0, :, :] - 0.5 * first_piece[columns - 2, :,
-                                                                                          :] + 0.5 * second_piece[1, :,
-                                                                                                     :]
+        left = first_piece[columns - 1, :, :] - second_piece[0, :, :] + (0.5 * first_piece[columns - 1, :, :] - 0.5 * second_piece[1, :, :])
         # v = get_ViL_inversion(second_piece, 'D')
         # for i in range(rows):
         #     left = 1.5 * first_piece[columns - 1, i, :] - 1.5 * second_piece[0, i, :] - 0.5 * first_piece[columns - 2, i, :] + 0.5 * second_piece[1, i, :]
@@ -191,7 +184,7 @@ def D(first_piece, second_piece, position):
         # right = left.T
         # res.append(np.dot(np.dot(left, v), right))
         # res.append(np.power(left, 2))
-    return np.sum(np.power(np.array(left), 2)) / rows
+    return np.sum(np.power(np.array(left), 2))
 
 
 def CSD(first_piece, second_piece, s, position):

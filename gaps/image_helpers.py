@@ -37,6 +37,8 @@ def flatten_image(image, piece_size, indexed=False):
                 image.extend(line.strip().split(" "))
 
         pieces = [Piece(value, int(image[index])) for index, value in enumerate(pieces)]
+    else :
+        pieces = [Piece(value, index) for index, value in enumerate(pieces)]
 
     return pieces, rows, columns
 

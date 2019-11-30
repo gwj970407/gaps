@@ -6,6 +6,8 @@ from gaps.individual import Individual
 
 SHARED_PIECE_PRIORITY = -10
 BUDDY_PIECE_PRIORITY = -1
+# SHARED_PIECE_PRIORITY = -1
+# BUDDY_PIECE_PRIORITY = -10
 
 
 class Crossover(object):

@@ -32,17 +32,17 @@ class ImageAnalysis(object):
                 "D": [],
                 "L": []
             }
-            cls.best_match_d = -1
-            cls.best_match_mgc = -1
+            cls.max_match_d = -1
+            cls.max_match_mgc = -1
 
         def update_best_match_table(first_piece, second_piece):
             # 保存每次计算出来的两个碎片的相似度
             # 记录每两块之间的相似度，加入到列表之中 (用颜色空间计算两个edge的距离)
             measure = dissimilarity_measure(first_piece, second_piece, orientation)
-            if (measure[0] > cls.best_match_d):
-                cls.best_match_d = measure[0]
-            if (measure[1] > cls.best_match_mgc):
-                cls.best_match_mgc = measure[1]
+            if (measure[0] > cls.max_match_d):
+                cls.max_match_d = measure[0]
+            if (measure[1] > cls.max_match_mgc):
+                cls.max_match_mgc = measure[1]
             # 保存每对的相似度
             cls.put_dissimilarity((first_piece.id, second_piece.id), orientation, measure)
             cls.best_match_table[second_piece.id][orientation[0]].append((first_piece.id, measure))
@@ -66,14 +66,14 @@ class ImageAnalysis(object):
                 d_mgc = cls.best_match_table[piece.id][orientation]
                 new_value = []
                 for piece_id, measure in d_mgc:
-                    new_value.append((piece_id, measure[0] / cls.best_match_d + measure[1] / cls.best_match_mgc))
+                    new_value.append((piece_id, measure[0] / cls.max_match_d + measure[1] / cls.max_match_mgc))
                 cls.best_match_table[piece.id][orientation] = new_value
 
         # normalize dissimilarity
         for id1, id2 in cls.dissimilarity_measures:
             for orientation in cls.dissimilarity_measures[(id1, id2)]:
                 v = cls.dissimilarity_measures[(id1, id2)][orientation]
-                new_value = v[0] / cls.best_match_d + v[1] / cls.best_match_mgc
+                new_value = v[0] / cls.max_match_d + v[1] / cls.max_match_mgc
                 cls.dissimilarity_measures[(id1, id2)][orientation] = new_value
 
         for piece in pieces:

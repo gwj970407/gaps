@@ -383,7 +383,7 @@ class Individual(object):
             return self.pieces[edge_index - 1].id
 
     def mutate(self):
-        # FIXME there still have imporve change, if i shuffle  which piece.id eqaul to -1 by random rather than single pick
+        # FIXME there still have promotion space, if i shuffle  which piece.id eqaul to -1 by random rather than single pick
         old_fitness = self.fitness
         new_fitness = None
         for i in range(len(self.pieces)):

@@ -46,7 +46,7 @@ def save_piece_position(pieces, rows, columns):
 def create_puzzle(image_path, output_path, piece_size):
     """Creates jigsaw puzzle from input image"""
     image = cv2.imread(image_path)
-    pieces, rows, columns = image_helpers.flatten_image(image, piece_size, True)
+    pieces, rows, columns = image_helpers.flatten_image(image, piece_size, False)
 
     # Create puzzle by stacking pieces
     puzzle = image_helpers.assemble_image(pieces, rows, columns, True)
