@@ -337,7 +337,7 @@ class Individual(object):
         for i in range(len(dissimilarity_list)):
             if dissimilarity_list[i][0] == candidate:
                 return i
-        return None
+        return len(dissimilarity_list)
 
     @staticmethod
     def get_value(dissimilarity_list, candidate):
@@ -382,22 +382,79 @@ class Individual(object):
         if (orientation == "L") and (edge_index % self.columns > 0):
             return self.pieces[edge_index - 1].id
 
+    def count_around_best_fit(self, piece, index):
+        pieces = self.pieces
+        row = index // self.rows
+        col = index % self.columns
+        best_match_table = ImageAnalysis.best_match_table[piece.id]
+        count = 0
+        if row == 0:
+            if col == 0:
+                count = self.find_index(best_match_table["R"], pieces[index + 1].id) \
+                        + self.find_index(best_match_table["D"], pieces[index + self.columns].id)
+            elif col == self.columns - 1:
+                count = self.find_index(best_match_table["L"], pieces[index - 1].id) \
+                        + self.find_index(best_match_table["D"], pieces[index + self.columns].id)
+            elif col < self.columns - 1:
+                count = self.find_index(best_match_table["R"], pieces[index + 1].id) \
+                        + self.find_index(best_match_table["D"], pieces[index + self.columns].id) \
+                        + self.find_index(best_match_table["L"], pieces[index - 1].id)
+        elif row == self.rows - 1:
+            if col == 0:
+                count = self.find_index(best_match_table["R"], pieces[index + 1].id) \
+                        + self.find_index(best_match_table["T"], pieces[index - self.columns].id)
+            elif col == self.columns - 1:
+                count = self.find_index(best_match_table["L"], pieces[index - 1].id) \
+                        + self.find_index(best_match_table["T"], pieces[index - self.columns].id)
+            elif col < self.columns - 1:
+                count = self.find_index(best_match_table["R"], pieces[index + 1].id) \
+                        + self.find_index(best_match_table["T"], pieces[index - self.columns].id) \
+                        + self.find_index(best_match_table["L"], pieces[index - 1].id)
+        elif 0 < row < self.rows - 1:
+            if col == 0:
+                count = self.find_index(best_match_table["R"], pieces[index + 1].id) \
+                        + self.find_index(best_match_table["T"], pieces[index - self.columns].id) \
+                        + self.find_index(best_match_table["D"], pieces[index + self.columns].id)
+            elif col == self.columns - 1:
+                count = self.find_index(best_match_table["L"], pieces[index - 1].id) \
+                        + self.find_index(best_match_table["T"], pieces[index - self.columns].id) \
+                        + self.find_index(best_match_table["D"], pieces[index + self.columns].id)
+            elif col < self.columns - 1:
+                count = self.find_index(best_match_table["L"], pieces[index - 1].id) \
+                        + self.find_index(best_match_table["R"], pieces[index + 1].id) \
+                        + self.find_index(best_match_table["T"], pieces[index - self.columns].id) \
+                        + self.find_index(best_match_table["D"], pieces[index + self.columns].id)
+        return count
+
     def mutate(self):
-        # FIXME there still have promotion space, if i shuffle  which piece.id eqaul to -1 by random rather than single pick
-        old_fitness = self.fitness
-        new_fitness = None
+        # # FIXME there still have promotion space, if i shuffle  which piece.id eqaul to -1 by random rather than single pick
+        # old_fitness = self.fitness
+        # new_fitness = None
+        # for i in range(len(self.pieces)):
+        #     old_fitness = self.fitness
+        #     randint = random.randint(0, len(self.pieces) - 1)
+        #     if i == randint:
+        #         continue
+        #     self.pieces[i], self.pieces[randint] = self.pieces[randint], self.pieces[i]
+        #     self.clear_fitness()
+        #     new_fitness = self.fitness
+        #     if new_fitness < old_fitness:
+        #         self.pieces[i], self.pieces[randint] = self.pieces[randint], self.pieces[i]
+        #         self.clear_fitness()
+        # print("\nnew_fitness %s, old_fitness %s" % (new_fitness, old_fitness), end="")
         for i in range(len(self.pieces)):
-            old_fitness = self.fitness
             randint = random.randint(0, len(self.pieces) - 1)
             if i == randint:
                 continue
+            i_piece = self.pieces[i]
+            randint_piece = self.pieces[randint]
+            old_fit_metric = self.count_around_best_fit(i_piece, i) + self.count_around_best_fit(randint_piece, randint)
             self.pieces[i], self.pieces[randint] = self.pieces[randint], self.pieces[i]
-            self.clear_fitness()
-            new_fitness = self.fitness
-            if new_fitness < old_fitness:
+            new_fit_metric = self.count_around_best_fit(i_piece, randint) + self.count_around_best_fit(randint_piece, i)
+            if new_fit_metric > old_fit_metric:
                 self.pieces[i], self.pieces[randint] = self.pieces[randint], self.pieces[i]
-                self.clear_fitness()
-        print("\nnew_fitness %s, old_fitness %s" % (new_fitness, old_fitness), end="")
+            else:
+                print("\nchange pieces new_index %s, old_index %s" % (randint, i))
 
     def do_local_select(self, pieces, r, c):
         rows = self.rows
@@ -566,7 +623,7 @@ class Individual(object):
                         best_position = position
             self.penalize_image[best_k[0]][best_k[1]] = self.pieces[best_position[0] * self.columns + best_position[1]]
             print("four piece %s, %s -> %s, %s , best_fitness %s" % (
-            best_position[0], best_position[1], best_k[0], best_k[1], best_fitness))
+                best_position[0], best_position[1], best_k[0], best_k[1], best_fitness))
             uncompleted_piece.pop(best_k)
             four_piece_around.remove(best_k)
             candidate_piece.pop(best_position)
@@ -622,7 +679,7 @@ class Individual(object):
                         best_position = position
             self.penalize_image[best_k[0]][best_k[1]] = self.pieces[best_position[0] * self.columns + best_position[1]]
             print("three piece %s, %s -> %s, %s , best_fitness %s" % (
-            best_position[0], best_position[1], best_k[0], best_k[1], best_fitness))
+                best_position[0], best_position[1], best_k[0], best_k[1], best_fitness))
             uncompleted_piece.pop(best_k)
             three_piece_around.remove(best_k)
             candidate_piece.pop(best_position)
@@ -704,6 +761,21 @@ class Individual(object):
                         best_position = position
             self.penalize_image[best_k[0]][best_k[1]] = self.pieces[best_position[0] * self.columns + best_position[1]]
             print("handle_uncompleted_piece %s, %s -> %s, %s , best_fitness %s" % (
-            best_position[0], best_position[1], best_k[0], best_k[1], best_fitness))
+                best_position[0], best_position[1], best_k[0], best_k[1], best_fitness))
             uncompleted_piece.pop(best_k)
             candidate_piece.pop(best_position)
+
+    def manually_select(self):
+        for i in range(len(self.pieces)):
+            for j in range(len(self.pieces)):
+                if i == j:
+                    continue
+                i_piece = self.pieces[i]
+                j_piece = self.pieces[j]
+                old_fit_metric = self.count_around_best_fit(i_piece, i) + self.count_around_best_fit(j_piece, j)
+                self.pieces[i], self.pieces[j] = self.pieces[j], self.pieces[i]
+                new_fit_metric = self.count_around_best_fit(i_piece, j) + self.count_around_best_fit(j_piece, i)
+                if new_fit_metric >= old_fit_metric:
+                    self.pieces[i], self.pieces[j] = self.pieces[j], self.pieces[i]
+                else:
+                    print("\nchange pieces new_index %s, old_index %s" % (j, i))

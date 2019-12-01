@@ -44,6 +44,7 @@ class Crossover(object):
     def run(self):
         self._initialize_kernel()
 
+        # FIXME 直觉告诉我不对
         while len(self._candidate_pieces) > 0:
             # 弹出一个最优先级的候选快，共享区域最小，互为最优匹配为次之，普通的最优相似度最慢pop出
             _, (position, piece_id), relative_piece = heapq.heappop(self._candidate_pieces)
@@ -81,6 +82,7 @@ class Crossover(object):
             # 把这个块各个方向上的最优匹配块加入候选块中
             self.add_piece_candidate(piece_id, orientation, position)
 
+    # FIXME 这里无法将单边相似的块区分出来，需要重新设计！！！
     def add_piece_candidate(self, piece_id, orientation, position):
         # 判断这一块在父母中是否有同样的共享块，（这个方向上的块一样）
         shared_piece = self._get_shared_piece(piece_id, orientation)
@@ -103,8 +105,7 @@ class Crossover(object):
         first_parent_edge = first_parent.edge(piece_id, orientation)
         second_parent_edge = second_parent.edge(piece_id, orientation)
 
-        if first_parent_edge is not None and second_parent_edge is not None \
-                and first_parent_edge == second_parent_edge:
+        if first_parent_edge == second_parent_edge:
             return first_parent_edge
 
     def _get_buddy_piece(self, piece_id, orientation):

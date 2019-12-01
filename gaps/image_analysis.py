@@ -39,10 +39,12 @@ class ImageAnalysis(object):
             # 保存每次计算出来的两个碎片的相似度
             # 记录每两块之间的相似度，加入到列表之中 (用颜色空间计算两个edge的距离)
             measure = dissimilarity_measure(first_piece, second_piece, orientation)
+
             if (measure[0] > cls.max_match_d):
                 cls.max_match_d = measure[0]
             if (measure[1] > cls.max_match_mgc):
                 cls.max_match_mgc = measure[1]
+
             # 保存每对的相似度
             cls.put_dissimilarity((first_piece.id, second_piece.id), orientation, measure)
             cls.best_match_table[second_piece.id][orientation[0]].append((first_piece.id, measure))

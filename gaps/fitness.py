@@ -100,33 +100,29 @@ def DG(first_piece, second_piece, position):
     res = []
     if position == 'L':
         v = get_VGiL_inversion(first_piece, 'L')
-        for i in range(rows):
-            left = 1.5 * epxl(second_piece, i, 0, 'D') - 1.5 * epxl(first_piece, i, columns - 1, 'D') + 0.5 * epxl(
-                first_piece, i, columns - 2, 'D') - 0.5 * epxl(second_piece, i, 1, 'D')
+        for i in range(1, rows):
+            left = 1.5 * epxl(second_piece, i, 0, 'D') - 1.5 * epxl(first_piece, i, columns - 1, 'D') + 0.5 * epxl(first_piece, i, columns - 2, 'D') - 0.5 * epxl(second_piece, i, 1, 'D')
             # left = CSDG(first_piece, second_piece, i, 'L') - ECABG(first_piece, second_piece, i, 'L')
             right = left.T
             res.append(np.dot(np.dot(left, v), right))
     elif position == 'R':
         v = get_VGiL_inversion(second_piece, 'R')
-        for i in range(rows):
-            left = 1.5 * epxl(first_piece, i, columns - 1, 'D') - 1.5 * epxl(second_piece, i, 0, 'D') - 0.5 * epxl(
-                first_piece, i, columns - 2, 'D') + 0.5 * epxl(second_piece, i, 1, 'D')
+        for i in range(1, rows):
+            left = 1.5 * epxl(first_piece, i, columns - 1, 'D') - 1.5 * epxl(second_piece, i, 0, 'D') - 0.5 * epxl(first_piece, i, columns - 2, 'D') + 0.5 * epxl(second_piece, i, 1, 'D')
             # left = CSDG(first_piece, second_piece, i, 'R') - ECABG(first_piece, second_piece, i, 'R')
             right = left.T
             res.append(np.dot(np.dot(left, v), right))
     elif position == 'T':
         v = get_VGiL_inversion(first_piece, 'T')
-        for i in range(columns):
-            left = 1.5 * epxl(second_piece, 0, i, 'H') - 1.5 * epxl(first_piece, columns - 1, i, 'H') + 0.5 * epxl(
-                first_piece, columns - 2, i, 'H') - 0.5 * epxl(second_piece, 1, i, 'H')
+        for i in range(1, columns):
+            left = 1.5 * epxl(second_piece, 0, i, 'H') - 1.5 * epxl(first_piece, columns - 1, i, 'H') + 0.5 * epxl(first_piece, columns - 2, i, 'H') - 0.5 * epxl(second_piece, 1, i, 'H')
             # left = CSDG(first_piece, second_piece, i, 'T') - ECABG(first_piece, second_piece, i, 'T')
             right = left.T
             res.append(np.dot(np.dot(left, v), right))
     elif position == 'D':
         v = get_VGiL_inversion(second_piece, 'D')
-        for i in range(columns):
-            left = 1.5 * epxl(first_piece, columns - 1, i, 'H') - 1.5 * epxl(second_piece, 0, i, 'H') - 0.5 * epxl(
-                first_piece, columns - 2, i, 'H') + 0.5 * epxl(second_piece, 1, i, 'H')
+        for i in range(1, columns):
+            left = 1.5 * epxl(first_piece, columns - 1, i, 'H') - 1.5 * epxl(second_piece, 0, i, 'H') - 0.5 * epxl(first_piece, columns - 2, i, 'H') + 0.5 * epxl(second_piece, 1, i, 'H')
             # left = CSDG(first_piece, second_piece, i, 'D') - ECABG(first_piece, second_piece, i, 'D')
             right = left.T
             res.append(np.dot(np.dot(left, v), right))
@@ -143,10 +139,11 @@ def get_ViL_inversion(*args):
 
 def D(first_piece, second_piece, position):
     rows, columns, _ = first_piece.shape()
-    # res = []
+    res = []
     left = None
     if position == 'L':
-        left = second_piece[:, 0, :] - first_piece[:, columns - 1, :] + (0.5 * second_piece[:, 1, :] - 0.5 * first_piece[:, columns - 1, :])
+        left = second_piece[:, 0, :] - first_piece[:, columns - 1, :]
+        # left = second_piece[:, 0, :] - first_piece[:, columns - 1, :] + (0.5 * second_piece[:, 1, :] - 0.5 * first_piece[:, columns - 1, :])
         # left = 1.5 * second_piece[:, 0, :] - 1.5 * first_piece[:, columns - 1, :] + 0.5 * first_piece[:, columns - 2, :] - 0.5 * second_piece[:, 1, :]
         # size = 3 * 3
         # v = get_ViL_inversion(first_piece, 'L')
@@ -157,7 +154,8 @@ def D(first_piece, second_piece, position):
         # res.append(np.dot(np.dot(left, v), right))
         # res.append(np.power(left, 2))
     elif position == 'R':
-        left = first_piece[:, columns - 1, :] -  second_piece[:, 0, :] + (0.5 * first_piece[:, columns - 1, :] - 0.5 * second_piece[:, 1, :])
+        left = first_piece[:, columns - 1, :] - second_piece[:, 0, :]
+        # left = first_piece[:, columns - 1, :] - second_piece[:, 0, :] + (0.5 * first_piece[:, columns - 1, :] - 0.5 * second_piece[:, 1, :])
         # left = 1.5 * first_piece[:, columns - 1, :] - 1.5 * second_piece[:, 0, :] - 0.5 * first_piece[:, columns - 2, :] + 0.5 * second_piece[:, 1, :]
         # v = get_ViL_inversion(second_piece, 'R')
         # for i in range(rows):
@@ -167,7 +165,8 @@ def D(first_piece, second_piece, position):
         # res.append(np.dot(np.dot(left, v), right))
         # res.append(np.power(left, 2))
     elif position == 'T':
-        left = second_piece[0, :, :] - first_piece[columns - 1, :, :] + (0.5 * second_piece[1, :, :] - 0.5 * first_piece[columns - 1, :, :])
+        left = second_piece[0, :, :] - first_piece[columns - 1, :, :]
+        # left = second_piece[0, :, :] - first_piece[columns - 1, :, :] + (0.5 * second_piece[1, :, :] - 0.5 * first_piece[columns - 1, :, :])
         # v = get_ViL_inversion(first_piece, 'T')
         # for i in range(columns):
         #     left = 1.5 * second_piece[0, i, :] - 1.5 * first_piece[columns - 1, i, :] + 0.5 * first_piece[columns - 2, i, :] - 0.5 * second_piece[1, i, :]
@@ -176,7 +175,8 @@ def D(first_piece, second_piece, position):
         # res.append(np.dot(np.dot(left, v), right))
         # res.append(np.power(left, 2))
     elif position == 'D':
-        left = first_piece[columns - 1, :, :] - second_piece[0, :, :] + (0.5 * first_piece[columns - 1, :, :] - 0.5 * second_piece[1, :, :])
+        left = first_piece[columns - 1, :, :] - second_piece[0, :, :]
+        # left = first_piece[columns - 1, :, :] - second_piece[0, :, :] + (0.5 * first_piece[columns - 1, :, :] - 0.5 * second_piece[1, :, :])
         # v = get_ViL_inversion(second_piece, 'D')
         # for i in range(rows):
         #     left = 1.5 * first_piece[columns - 1, i, :] - 1.5 * second_piece[0, i, :] - 0.5 * first_piece[columns - 2, i, :] + 0.5 * second_piece[1, i, :]
@@ -266,7 +266,7 @@ def ViL(piece, position):
      ViL calculated from samples,{xi(s,S)−xi(s,S−1))∣s=1,2,...S}.
     """
     rows, columns, _ = piece.shape()
-    result = np.zeros(shape=[3, rows + 3])
+    result = np.zeros(shape=[3, rows])
     if position == 'L':
         for i in range(rows):
             # [1,2,3]
@@ -280,9 +280,6 @@ def ViL(piece, position):
     elif position == 'D':
         for i in range(columns):
             result[:, i] = piece[0, i, :] - piece[1, i, :]
-    # result[:, -3] = [1, 0, 0]
-    # result[:, -2] = [0, 1, 0]
-    # result[:, -1] = [0, 0, 1]
     return result
 
 
@@ -291,22 +288,19 @@ def VGiL(piece, position):
      VGiL calculated from samples,{δ(s,S)−δ(s,S−1))∣s=2,2,...S}.
     """
     rows, columns, _ = piece.shape()
-    result = np.zeros(shape=[3, rows + 3])
+    result = np.zeros(shape=[3, rows - 1])
     if position == 'L':
         for i in range(1, rows):
-            result[:, i] = epxl(piece, i, columns - 1, 'D') - epxl(piece, i, columns - 2, 'D')
+            result[:, i - 1] = epxl(piece, i, columns - 1, 'D') - epxl(piece, i, columns - 2, 'D')
     elif position == 'R':
         for i in range(1, rows):
-            result[:, i] = epxl(piece, i, 0, 'D') - epxl(piece, i, 1, 'D')
+            result[:, i - 1] = epxl(piece, i, 0, 'D') - epxl(piece, i, 1, 'D')
     elif position == 'T':
         for i in range(1, columns):
-            result[:, i] = epxl(piece, rows - 1, i, 'H') - epxl(piece, rows - 2, i, 'H')
+            result[:, i - 1] = epxl(piece, rows - 1, i, 'H') - epxl(piece, rows - 2, i, 'H')
     elif position == 'D':
         for i in range(1, columns):
-            result[:, i] = epxl(piece, 0, i, 'H') - epxl(piece, 1, i, 'H')
-    # result[:, -3] = [1, 0, 0]
-    # result[:, -2] = [0, 1, 0]
-    # result[:, -1] = [0, 0, 1]
+            result[:, i - 1] = epxl(piece, 0, i, 'H') - epxl(piece, 1, i, 'H')
     return result
 
 
@@ -319,6 +313,8 @@ def epxl(*args):
     piece = args[0]
     x = args[1]
     y = args[2]
+    if x < 0 or y < 0:
+        1 / 0
     position = args[3]
     v = None
     if position == 'D':

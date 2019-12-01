@@ -73,7 +73,7 @@ class GeneticAlgorithm(object):
             best_adjoin = fittest.best_adjoin(self._piece_size)
             rightImage = cv2.cvtColor(best_adjoin, cv2.COLOR_RGB2BGR)
             cv2.imwrite("temp_image_best_adjoin_" + str(generation) + ".jpg", rightImage)
-            # penalize = fittest.penalize()
+            # penalisze = fittest.penalize()
             # print("  new_fittest : ", fittest.fitness)
             # rightImage = cv2.cvtColor(penalize, cv2.COLOR_RGB2BGR)
             # cv2.imwrite("temp_image_penalize_" + str(generation) + ".jpg", rightImage)
@@ -85,11 +85,12 @@ class GeneticAlgorithm(object):
                 best_fitness_score = fittest.fitness
                 termination_counter = 0
 
-            if termination_counter == self.TERMINATION_THRESHOLD // 2:
+            if termination_counter % 4  == 2:
                 predicate = Individual(fittest.pieces, fittest.rows, fittest.columns, shuffle=False)
                 predicate.penalize_image = fittest.penalize_image
                 # 处理局部最优
-                predicate.shuffle_assembling()
+                predicate.manually_select()
+                # predicate.shuffle_assembling()
                 print("predicate_fitness : %s " % str(predicate.fitness))
                 image = predicate.to_image()
                 rightImage = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
