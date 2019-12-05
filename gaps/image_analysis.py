@@ -69,6 +69,7 @@ class ImageAnalysis(object):
                 new_value = []
                 for piece_id, measure in d_mgc:
                     new_value.append((piece_id, measure[0] / cls.max_match_d + measure[1] / cls.max_match_mgc))
+                    # new_value.append((piece_id, measure[0] / cls.max_match_d))
                 cls.best_match_table[piece.id][orientation] = new_value
 
         # normalize dissimilarity
@@ -76,6 +77,7 @@ class ImageAnalysis(object):
             for orientation in cls.dissimilarity_measures[(id1, id2)]:
                 v = cls.dissimilarity_measures[(id1, id2)][orientation]
                 new_value = v[0] / cls.max_match_d + v[1] / cls.max_match_mgc
+                # new_value = v[0] / cls.max_match_d
                 cls.dissimilarity_measures[(id1, id2)][orientation] = new_value
 
         for piece in pieces:
@@ -111,7 +113,7 @@ class ImageAnalysis(object):
                              'LR' => 'Left-Right'
                              'TD' => 'Top-Down'
 
-        Usage::
+        Us
 
             >>> from gaps.image_analysis import ImageAnalysis
             >>> ImageAnalysis.get_dissimilarity([1, 2], "TD")

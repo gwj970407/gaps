@@ -64,6 +64,13 @@ class GeneticAlgorithm(object):
             fittest = self._best_individual()
             # FIXME 这里可以改一下
             fittest.mutate()
+            min_fitness = 0
+            for index in range(len(new_population)):
+                if new_population[index].fitness < new_population[min_fitness].fitness:
+                    min_fitness = index
+            fittest.clear_fitness()
+            if fittest.fitness > new_population[min_fitness].fitness:
+                new_population[min_fitness] = fittest
 
             print("old_fittest : ", fittest.fitness, end="")
 
@@ -85,12 +92,12 @@ class GeneticAlgorithm(object):
                 best_fitness_score = fittest.fitness
                 termination_counter = 0
 
-            if termination_counter % 4  == 2:
+            if termination_counter % 4 == 2:
                 predicate = Individual(fittest.pieces, fittest.rows, fittest.columns, shuffle=False)
                 predicate.penalize_image = fittest.penalize_image
                 # 处理局部最优
-                predicate.manually_select()
-                # predicate.shuffle_assembling()
+                # predicate.manually_select()
+                predicate.shuffle_assembling()
                 print("predicate_fitness : %s " % str(predicate.fitness))
                 image = predicate.to_image()
                 rightImage = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
@@ -99,7 +106,6 @@ class GeneticAlgorithm(object):
                     if new_population[index].fitness < predicate.fitness:
                         new_population[index] = predicate
                         break
-
 
             # 如果连续十代都没有更优子代，则退出
             if termination_counter == self.TERMINATION_THRESHOLD:

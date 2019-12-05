@@ -101,32 +101,36 @@ def DG(first_piece, second_piece, position):
     if position == 'L':
         v = get_VGiL_inversion(first_piece, 'L')
         for i in range(1, rows):
-            left = 1.5 * epxl(second_piece, i, 0, 'D') - 1.5 * epxl(first_piece, i, columns - 1, 'D') + 0.5 * epxl(first_piece, i, columns - 2, 'D') - 0.5 * epxl(second_piece, i, 1, 'D')
+            left = 1.5 * epxl(second_piece, i, 0, 'D') - 1.5 * epxl(first_piece, i, columns - 1, 'D') + 0.5 * epxl(
+                first_piece, i, columns - 2, 'D') - 0.5 * epxl(second_piece, i, 1, 'D')
             # left = CSDG(first_piece, second_piece, i, 'L') - ECABG(first_piece, second_piece, i, 'L')
             right = left.T
             res.append(np.dot(np.dot(left, v), right))
     elif position == 'R':
         v = get_VGiL_inversion(second_piece, 'R')
         for i in range(1, rows):
-            left = 1.5 * epxl(first_piece, i, columns - 1, 'D') - 1.5 * epxl(second_piece, i, 0, 'D') - 0.5 * epxl(first_piece, i, columns - 2, 'D') + 0.5 * epxl(second_piece, i, 1, 'D')
+            left = 1.5 * epxl(first_piece, i, columns - 1, 'D') - 1.5 * epxl(second_piece, i, 0, 'D') - 0.5 * epxl(
+                first_piece, i, columns - 2, 'D') + 0.5 * epxl(second_piece, i, 1, 'D')
             # left = CSDG(first_piece, second_piece, i, 'R') - ECABG(first_piece, second_piece, i, 'R')
             right = left.T
             res.append(np.dot(np.dot(left, v), right))
     elif position == 'T':
         v = get_VGiL_inversion(first_piece, 'T')
         for i in range(1, columns):
-            left = 1.5 * epxl(second_piece, 0, i, 'H') - 1.5 * epxl(first_piece, columns - 1, i, 'H') + 0.5 * epxl(first_piece, columns - 2, i, 'H') - 0.5 * epxl(second_piece, 1, i, 'H')
+            left = 1.5 * epxl(second_piece, 0, i, 'H') - 1.5 * epxl(first_piece, columns - 1, i, 'H') + 0.5 * epxl(
+                first_piece, columns - 2, i, 'H') - 0.5 * epxl(second_piece, 1, i, 'H')
             # left = CSDG(first_piece, second_piece, i, 'T') - ECABG(first_piece, second_piece, i, 'T')
             right = left.T
             res.append(np.dot(np.dot(left, v), right))
     elif position == 'D':
         v = get_VGiL_inversion(second_piece, 'D')
         for i in range(1, columns):
-            left = 1.5 * epxl(first_piece, columns - 1, i, 'H') - 1.5 * epxl(second_piece, 0, i, 'H') - 0.5 * epxl(first_piece, columns - 2, i, 'H') + 0.5 * epxl(second_piece, 1, i, 'H')
+            left = 1.5 * epxl(first_piece, columns - 1, i, 'H') - 1.5 * epxl(second_piece, 0, i, 'H') - 0.5 * epxl(
+                first_piece, columns - 2, i, 'H') + 0.5 * epxl(second_piece, 1, i, 'H')
             # left = CSDG(first_piece, second_piece, i, 'D') - ECABG(first_piece, second_piece, i, 'D')
             right = left.T
             res.append(np.dot(np.dot(left, v), right))
-    return np.sum((np.array(res)))
+    return np.sum(np.sqrt(np.abs(res)))
 
 
 def get_ViL_inversion(*args):
@@ -165,7 +169,7 @@ def D(first_piece, second_piece, position):
         # res.append(np.dot(np.dot(left, v), right))
         # res.append(np.power(left, 2))
     elif position == 'T':
-        left = second_piece[0, :, :] - first_piece[columns - 1, :, :]
+        left = second_piece[0, :, :] - first_piece[rows - 1, :, :]
         # left = second_piece[0, :, :] - first_piece[columns - 1, :, :] + (0.5 * second_piece[1, :, :] - 0.5 * first_piece[columns - 1, :, :])
         # v = get_ViL_inversion(first_piece, 'T')
         # for i in range(columns):
@@ -175,7 +179,7 @@ def D(first_piece, second_piece, position):
         # res.append(np.dot(np.dot(left, v), right))
         # res.append(np.power(left, 2))
     elif position == 'D':
-        left = first_piece[columns - 1, :, :] - second_piece[0, :, :]
+        left = first_piece[rows - 1, :, :] - second_piece[0, :, :]
         # left = first_piece[columns - 1, :, :] - second_piece[0, :, :] + (0.5 * first_piece[columns - 1, :, :] - 0.5 * second_piece[1, :, :])
         # v = get_ViL_inversion(second_piece, 'D')
         # for i in range(rows):
@@ -184,7 +188,7 @@ def D(first_piece, second_piece, position):
         # right = left.T
         # res.append(np.dot(np.dot(left, v), right))
         # res.append(np.power(left, 2))
-    return np.sum(np.power(np.array(left), 2))
+    return np.sqrt(np.sum(np.power(left, 2)))
 
 
 def CSD(first_piece, second_piece, s, position):

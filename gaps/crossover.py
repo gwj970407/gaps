@@ -84,7 +84,7 @@ class Crossover(object):
 
     # FIXME 这里无法将单边相似的块区分出来，需要重新设计！！！
     def add_piece_candidate(self, piece_id, orientation, position):
-        # 判断这一块在父母中是否有同样的共享块，（这个方向上的块一样）
+        """# 判断这一块在父母中是否有同样的共享块，（这个方向上的块一样）
         shared_piece = self._get_shared_piece(piece_id, orientation)
         if self._is_valid_piece(shared_piece):
             self._add_shared_piece_candidate(shared_piece, position, (piece_id, orientation))
@@ -98,7 +98,7 @@ class Crossover(object):
         best_match_piece, priority = self._get_best_match_piece(piece_id, orientation)
         if self._is_valid_piece(best_match_piece):
             self._add_best_match_piece_candidate(best_match_piece, position, priority, (piece_id, orientation))
-            return
+            return"""
 
     def _get_shared_piece(self, piece_id, orientation):
         first_parent, second_parent = self._parents
