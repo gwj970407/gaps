@@ -3,16 +3,19 @@ import heapq
 
 from gaps.image_analysis import ImageAnalysis
 from gaps.individual import Individual
+import numpy as np
 
 SHARED_PIECE_PRIORITY = -10
 BUDDY_PIECE_PRIORITY = -1
+
+
 # SHARED_PIECE_PRIORITY = -1
 # BUDDY_PIECE_PRIORITY = -10
 
 
 class Crossover(object):
 
-    def  __init__(self, first_parent, second_parent):
+    def __init__(self, first_parent, second_parent):
         self._parents = (first_parent, second_parent)
         self._pieces_length = len(first_parent.pieces)
         self._child_rows = first_parent.rows
@@ -29,7 +32,9 @@ class Crossover(object):
         self._taken_positions = set()
 
         # Priority queue
-        self._candidate_pieces = []
+        self._shared_candidate_pieces = []
+        self._buddy_candidate_pieces = []
+        self._best_match_candidate_pieces = []
 
     def child(self):
         pieces = [None] * self._pieces_length
@@ -44,23 +49,62 @@ class Crossover(object):
     def run(self):
         self._initialize_kernel()
 
-        # FIXME 直觉告诉我不对
-        while len(self._candidate_pieces) > 0:
-            # 弹出一个最优先级的候选快，共享区域最小，互为最优匹配为次之，普通的最优相似度最慢pop出
-            _, (position, piece_id), relative_piece = heapq.heappop(self._candidate_pieces)
+        directions = ["L", "R", "T", "D"]
+        while len(self._taken_positions) < self._pieces_length:
+            np.random.shuffle(directions)
 
-            if position in self._taken_positions:
+            selected = False
+            np.random.shuffle(self._shared_candidate_pieces)
+            while len(self._shared_candidate_pieces) > 0:
+                (position, piece_id), relative_piece = self._shared_candidate_pieces.pop()
+                if position in self._taken_positions:
+                    continue
+                if piece_id in self._kernel:
+                    self.add_piece_candidate(relative_piece[0], relative_piece[1], position)
+                else:
+                    selected = True
+                    self._put_piece_to_kernel(piece_id, position)
+                    break
+            if selected:
                 continue
-
-            # If piece is already placed, find new piece candidate and put it back to
-            # priority queue
-            if piece_id in self._kernel:
-                # relative_piece[0] 代表piece_id, [1]代表方向，寻找这个位置这个方向的新最优匹配块
-                self.add_piece_candidate(relative_piece[0], relative_piece[1], position)
+            np.random.shuffle(self._buddy_candidate_pieces)
+            while len(self._buddy_candidate_pieces) > 0:
+                (position, piece_id), relative_piece = self._buddy_candidate_pieces.pop()
+                if position in self._taken_positions:
+                    continue
+                if piece_id in self._kernel:
+                    self.add_piece_candidate(relative_piece[0], relative_piece[1], position)
+                else:
+                    selected = True
+                    self._put_piece_to_kernel(piece_id, position)
+                    break
+            if selected:
                 continue
-
-            # 把这一块放入拼图中
-            self._put_piece_to_kernel(piece_id, position)
+            np.random.shuffle(self._best_match_candidate_pieces)
+            while len(self._best_match_candidate_pieces) > 0:
+                (position, piece_id), relative_piece = self._best_match_candidate_pieces.pop()
+                if position in self._taken_positions:
+                    continue
+                if piece_id in self._kernel:
+                    self.add_piece_candidate(relative_piece[0], relative_piece[1], position)
+                else:
+                    self._put_piece_to_kernel(piece_id, position)
+                    break
+            # # 弹出一个最优先级的候选快，共享区域最小，互为最优匹配为次之，普通的最优相似度最慢pop出
+            # _, (position, piece_id), relative_piece = heapq.heappop(self._candidate_pieces)
+            #
+            # if position in self._taken_positions:
+            #     continue
+            #
+            # # If piece is already placed, find new piece candidate and put it back to
+            # # priority queue
+            # if piece_id in self._kernel:
+            #     # relative_piece[0] 代表piece_id, [1]代表方向，寻找这个位置这个方向的新最优匹配块
+            #     self.add_piece_candidate(relative_piece[0], relative_piece[1], position)
+            #     continue
+            #
+            # # 把这一块放入拼图中
+            # self._put_piece_to_kernel(piece_id, position)
 
     def _initialize_kernel(self):
         # 取左父亲图片的随机一个piece作为初始根piece
@@ -84,7 +128,7 @@ class Crossover(object):
 
     # FIXME 这里无法将单边相似的块区分出来，需要重新设计！！！
     def add_piece_candidate(self, piece_id, orientation, position):
-        """# 判断这一块在父母中是否有同样的共享块，（这个方向上的块一样）
+        # 判断这一块在父母中是否有同样的共享块，（这个方向上的块一样）
         shared_piece = self._get_shared_piece(piece_id, orientation)
         if self._is_valid_piece(shared_piece):
             self._add_shared_piece_candidate(shared_piece, position, (piece_id, orientation))
@@ -98,7 +142,7 @@ class Crossover(object):
         best_match_piece, priority = self._get_best_match_piece(piece_id, orientation)
         if self._is_valid_piece(best_match_piece):
             self._add_best_match_piece_candidate(best_match_piece, position, priority, (piece_id, orientation))
-            return"""
+            return
 
     def _get_shared_piece(self, piece_id, orientation):
         first_parent, second_parent = self._parents
@@ -126,16 +170,19 @@ class Crossover(object):
                 return piece, dissimilarity_measure
 
     def _add_shared_piece_candidate(self, piece_id, position, relative_piece):
-        piece_candidate = (SHARED_PIECE_PRIORITY, (position, piece_id), relative_piece)
-        heapq.heappush(self._candidate_pieces, piece_candidate)
+        piece_candidate = ((position, piece_id), relative_piece)
+        self._shared_candidate_pieces.append(piece_candidate)
+        # heapq.heappush(self._candidate_pieces, piece_candidate)
 
     def _add_buddy_piece_candidate(self, piece_id, position, relative_piece):
-        piece_candidate = (BUDDY_PIECE_PRIORITY, (position, piece_id), relative_piece)
-        heapq.heappush(self._candidate_pieces, piece_candidate)
+        piece_candidate = ((position, piece_id), relative_piece)
+        self._buddy_candidate_pieces.append(piece_candidate)
+        # heapq.heappush(self._candidate_pieces, piece_candidate)
 
     def _add_best_match_piece_candidate(self, piece_id, position, priority, relative_piece):
-        piece_candidate = (priority, (position, piece_id), relative_piece)
-        heapq.heappush(self._candidate_pieces, piece_candidate)
+        piece_candidate = ((position, piece_id), relative_piece)
+        self._best_match_candidate_pieces.append(piece_candidate)
+        # heapq.heappush(self._candidate_pieces, piece_candidate)
 
     def _available_boundaries(self, row_and_column):
         (row, column) = row_and_column
