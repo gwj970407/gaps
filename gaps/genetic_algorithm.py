@@ -22,6 +22,7 @@ class GeneticAlgorithm(object):
         self._elite_size = elite_size
         pieces, rows, columns = image_helpers.flatten_image(image, piece_size, indexed=True)
         # 循环population_size次，每次都将Individual方法调用返回的对象加入到list中
+
         self._population = [Individual(pieces, rows, columns) for _ in range(population_size)]
         self._pieces = pieces
 
@@ -62,15 +63,16 @@ class GeneticAlgorithm(object):
 
             # 从上一代中选出适应度最高的一个
             fittest = self._best_individual()
-            # FIXME 这里可以改一下
+
             fittest.mutate()
-            min_fitness = 0
-            for index in range(len(new_population)):
-                if new_population[index].fitness < new_population[min_fitness].fitness:
-                    min_fitness = index
-            fittest.clear_fitness()
-            if fittest.fitness > new_population[min_fitness].fitness:
-                new_population[min_fitness] = fittest
+
+            # min_fitness = 0
+            # for index in range(len(new_population)):
+            #     if new_population[index].fitness < new_population[min_fitness].fitness:
+            #         min_fitness = index
+            # fittest.clear_fitness()
+            # if fittest.fitness > new_population[min_fitness].fitness:
+            #     new_population[min_fitness] = fittest
 
             print("old_fittest : ", fittest.fitness, end="")
 
@@ -96,8 +98,8 @@ class GeneticAlgorithm(object):
                 predicate = Individual(fittest.pieces, fittest.rows, fittest.columns, shuffle=False)
                 predicate.penalize_image = fittest.penalize_image
                 # 处理局部最优
-                # predicate.manually_select()
-                predicate.shuffle_assembling()
+                predicate.manually_select()
+                # predicate.shuffle_assembling()
                 print("predicate_fitness : %s " % str(predicate.fitness))
                 image = predicate.to_image()
                 rightImage = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)

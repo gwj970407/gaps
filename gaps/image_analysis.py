@@ -26,7 +26,7 @@ class ImageAnalysis(object):
             # Edges with lower dissimilarity_measure have higher priority.
             # 保存每一块的每个方向匹配度最高的块 420 * 4
             cls.best_match_table[piece.id] = {
-                # "T": [{piece.id,dissimilarity}],
+                # "T": [(piece.id,dissimilarity)],
                 "T": [],
                 "R": [],
                 "D": [],
@@ -49,8 +49,6 @@ class ImageAnalysis(object):
             cls.put_dissimilarity((first_piece.id, second_piece.id), orientation, measure)
             cls.best_match_table[second_piece.id][orientation[0]].append((first_piece.id, measure))
             cls.best_match_table[first_piece.id][orientation[1]].append((second_piece.id, measure))
-
-
 
         # Calculate dissimilarity measures and best matches for each piece.计算相似度
         iterations = len(pieces) - 1

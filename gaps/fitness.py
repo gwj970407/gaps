@@ -141,11 +141,11 @@ def get_ViL_inversion(*args):
     return v
 
 
-def D(first_piece, second_piece, position):
+def D(first_piece, second_piece, orientation):
     rows, columns, _ = first_piece.shape()
     res = []
     left = None
-    if position == 'L':
+    if orientation == 'L':
         left = second_piece[:, 0, :] - first_piece[:, columns - 1, :]
         # left = second_piece[:, 0, :] - first_piece[:, columns - 1, :] + (0.5 * second_piece[:, 1, :] - 0.5 * first_piece[:, columns - 1, :])
         # left = 1.5 * second_piece[:, 0, :] - 1.5 * first_piece[:, columns - 1, :] + 0.5 * first_piece[:, columns - 2, :] - 0.5 * second_piece[:, 1, :]
@@ -157,7 +157,7 @@ def D(first_piece, second_piece, position):
         # right = left.T
         # res.append(np.dot(np.dot(left, v), right))
         # res.append(np.power(left, 2))
-    elif position == 'R':
+    elif orientation == 'R':
         left = first_piece[:, columns - 1, :] - second_piece[:, 0, :]
         # left = first_piece[:, columns - 1, :] - second_piece[:, 0, :] + (0.5 * first_piece[:, columns - 1, :] - 0.5 * second_piece[:, 1, :])
         # left = 1.5 * first_piece[:, columns - 1, :] - 1.5 * second_piece[:, 0, :] - 0.5 * first_piece[:, columns - 2, :] + 0.5 * second_piece[:, 1, :]
@@ -168,7 +168,7 @@ def D(first_piece, second_piece, position):
         # right = left.T
         # res.append(np.dot(np.dot(left, v), right))
         # res.append(np.power(left, 2))
-    elif position == 'T':
+    elif orientation == 'T':
         left = second_piece[0, :, :] - first_piece[rows - 1, :, :]
         # left = second_piece[0, :, :] - first_piece[columns - 1, :, :] + (0.5 * second_piece[1, :, :] - 0.5 * first_piece[columns - 1, :, :])
         # v = get_ViL_inversion(first_piece, 'T')
@@ -178,7 +178,7 @@ def D(first_piece, second_piece, position):
         # right = left.T
         # res.append(np.dot(np.dot(left, v), right))
         # res.append(np.power(left, 2))
-    elif position == 'D':
+    elif orientation == 'D':
         left = first_piece[rows - 1, :, :] - second_piece[0, :, :]
         # left = first_piece[columns - 1, :, :] - second_piece[0, :, :] + (0.5 * first_piece[columns - 1, :, :] - 0.5 * second_piece[1, :, :])
         # v = get_ViL_inversion(second_piece, 'D')
