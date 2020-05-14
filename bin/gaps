@@ -29,10 +29,10 @@ def show_image(img, title):
     plt.show()
 
 
-def save_piece_position(pieces, rows, columns):
+def save_piece_position(pieces, rows, columns, solution_file="solution_position.txt"):
     if not isinstance(pieces[0], Piece):
         pass
-    with open("solution_position.txt", "w") as f:
+    with open(solution_file, "w") as f:
         for i in range(rows):
             id_list = []
             for j in range(columns):
@@ -49,6 +49,9 @@ def parse_arguments():
     parser.add_argument("--size", type=int, help="Single piece size in pixels.")
     parser.add_argument("--verbose", action="store_true", help="Show best individual after each generation.")
     parser.add_argument("--save", action="store_true", help="Save puzzle result as image.")
+    parser.add_argument("--position_file", type=str, default="image_position.txt")
+    parser.add_argument("--solution_file", type=str, default="solution_position.txt")
+
     return parser.parse_args()
 
 
@@ -76,20 +79,20 @@ if __name__ == "__main__":
     # Let the games begin! And may the odds be in your favor!
     start = time()
     # 新建一个GA对象
-    algorithm = GeneticAlgorithm(image, piece_size, args.population, args.generations)
+    algorithm = GeneticAlgorithm(image, piece_size, args.population, args.generations, position_file=args.position_file)
     # 调用GA对象的开始进化方法
     solution = algorithm.start_evolution(args.verbose)
     end = time()
 
     print("\n=== Done in {0:.3f} s".format(end - start))
 
-    save_piece_position(solution.pieces, solution.rows, solution.columns)
+    save_piece_position(solution.pieces, solution.rows, solution.columns, args.solution_file)
     solution_image = solution.to_image()
 
     solution_image_name = args.image.split(".")[0] + "_solution_" + str(GENERATIONS) + "_" + str(POPULATION) + ".jpg"
 
     if args.save:
-        # opencv use BGR color space. in order to save correct image, i convert color space here
+        # opencv use BGR color space. in order to save correct image, convert color space here
         rightImage = cv2.cvtColor(solution_image, cv2.COLOR_RGB2BGR)
         cv2.imwrite(solution_image_name, rightImage)
         print("=== Result saved as '{}'".format(solution_image_name))

@@ -14,13 +14,14 @@ class GeneticAlgorithm(object):
     TERMINATION_THRESHOLD = 20
 
     # 构造方法：  以下划线开头的是类的内部方法，一般不会被手动调用
-    def __init__(self, image, piece_size, population_size, generations, elite_size=2):
+    def __init__(self, image, piece_size, population_size, generations, elite_size=2,
+                 position_file="image_position.txt"):
         # 初始化种群： 代数，人口 TODO
         self._image = image
         self._piece_size = piece_size
         self._generations = generations
         self._elite_size = elite_size
-        pieces, rows, columns = image_helpers.flatten_image(image, piece_size, indexed=True)
+        pieces, rows, columns = image_helpers.flatten_image(image, piece_size, indexed=True, position_file=position_file)
         # 循环population_size次，每次都将Individual方法调用返回的对象加入到list中
 
         self._population = [Individual(pieces, rows, columns) for _ in range(population_size)]

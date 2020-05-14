@@ -18,7 +18,7 @@ setup(
         "opencv-python"
     ],
     scripts=[
-        "bin/create_puzzle",
+        "bin/create_puzzle.py",
         "bin/gaps"
     ]
 )

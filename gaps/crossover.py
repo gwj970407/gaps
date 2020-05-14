@@ -50,8 +50,8 @@ class Crossover(object):
         self._initialize_kernel()
 
         directions = ["L", "R", "T", "D"]
+        # np.random.shuffle(directions)
         while len(self._taken_positions) < self._pieces_length:
-            np.random.shuffle(directions)
 
             selected = False
             np.random.shuffle(self._shared_candidate_pieces)

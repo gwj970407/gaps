@@ -2,7 +2,7 @@ import numpy as np
 from gaps.piece import Piece
 
 
-def flatten_image(image, piece_size, indexed=False):
+def flatten_image(image, piece_size, indexed=False, position_file="../bin/image_position.txt"):
     """Converts image into list of square pieces.
 
     Input image is divided into square pieces of specified size and than
@@ -32,12 +32,12 @@ def flatten_image(image, piece_size, indexed=False):
 
     if indexed:
         image = []
-        with open("../bin/image_position.txt", "r") as f:
+        with open(position_file, "r") as f:
             for line in f:
                 image.extend(line.strip().split(" "))
 
         pieces = [Piece(value, int(image[index])) for index, value in enumerate(pieces)]
-    else :
+    else:
         pieces = [Piece(value, index) for index, value in enumerate(pieces)]
 
     return pieces, rows, columns

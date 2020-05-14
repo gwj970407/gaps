@@ -427,34 +427,34 @@ class Individual(object):
         return count
 
     def mutate(self):
-        # # FIXME there still have promotion space, if i shuffle  which piece.id eqaul to -1 by random rather than single pick
-        # old_fitness = self.fitness
-        # new_fitness = None
-        # for i in range(len(self.pieces)):
-        #     old_fitness = self.fitness
-        #     randint = random.randint(0, len(self.pieces) - 1)
-        #     if i == randint:
-        #         continue
-        #     self.pieces[i], self.pieces[randint] = self.pieces[randint], self.pieces[i]
-        #     self.clear_fitness()
-        #     new_fitness = self.fitness
-        #     if new_fitness < old_fitness:
-        #         self.pieces[i], self.pieces[randint] = self.pieces[randint], self.pieces[i]
-        #         self.clear_fitness()
-        # print("\nnew_fitness %s, old_fitness %s" % (new_fitness, old_fitness), end="")
+        # FIXME there still have promotion space, if i shuffle  which piece.id eqaul to -1 by random rather than single pick
+        old_fitness = self.fitness
+        new_fitness = None
         for i in range(len(self.pieces)):
+            old_fitness = self.fitness
             randint = random.randint(0, len(self.pieces) - 1)
             if i == randint:
                 continue
-            i_piece = self.pieces[i]
-            randint_piece = self.pieces[randint]
-            old_fit_metric = self.count_around_best_fit(i_piece, i) + self.count_around_best_fit(randint_piece, randint)
             self.pieces[i], self.pieces[randint] = self.pieces[randint], self.pieces[i]
-            new_fit_metric = self.count_around_best_fit(i_piece, randint) + self.count_around_best_fit(randint_piece, i)
-            if new_fit_metric > old_fit_metric:
+            self.clear_fitness()
+            new_fitness = self.fitness
+            if new_fitness < old_fitness:
                 self.pieces[i], self.pieces[randint] = self.pieces[randint], self.pieces[i]
-            else:
-                print("\nchange pieces new_index %s, old_index %s" % (randint, i))
+                self.clear_fitness()
+        print("\nnew_fitness %s, old_fitness %s" % (new_fitness, old_fitness), end="")
+        # for i in range(len(self.pieces)):
+        #     randint = random.randint(0, len(self.pieces) - 1)
+        #     if i == randint:
+        #         continue
+        #     i_piece = self.pieces[i]
+        #     randint_piece = self.pieces[randint]
+        #     old_fit_metric = self.count_around_best_fit(i_piece, i) + self.count_around_best_fit(randint_piece, randint)
+        #     self.pieces[i], self.pieces[randint] = self.pieces[randint], self.pieces[i]
+        #     new_fit_metric = self.count_around_best_fit(i_piece, randint) + self.count_around_best_fit(randint_piece, i)
+        #     if new_fit_metric > old_fit_metric:
+        #         self.pieces[i], self.pieces[randint] = self.pieces[randint], self.pieces[i]
+        #     else:
+        #         print("\nchange pieces new_index %s, old_index %s" % (randint, i))
 
     def do_local_select(self, pieces, r, c):
         rows = self.rows

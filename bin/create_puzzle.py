@@ -29,10 +29,10 @@ COLOR_STRING = {
 }
 
 
-def save_piece_position(pieces, rows, columns):
+def save_piece_position(pieces, rows, columns, position_file):
     if not isinstance(pieces[0], Piece):
         pass
-    with open("image_position.txt", "w") as f:
+    with open(position_file, "w") as f:
         for i in range(rows):
             id_list = []
             for j in range(columns):
@@ -40,10 +40,7 @@ def save_piece_position(pieces, rows, columns):
             f.write(str.join(" ", id_list) + "\n")
 
 
-
-
-
-def create_puzzle(image_path, output_path, piece_size):
+def create_puzzle(image_path, output_path, piece_size, position_file):
     """Creates jigsaw puzzle from input image"""
     image = cv2.imread(image_path)
     # 分割图片
@@ -59,7 +56,7 @@ def create_puzzle(image_path, output_path, piece_size):
     # Create puzzle by stacking pieces
     puzzle = image_helpers.assemble_image(pieces, rows, columns, True)
 
-    save_piece_position(pieces, rows, columns)
+    save_piece_position(pieces, rows, columns, position_file)
 
     cv2.imwrite(output_path, puzzle)
     print_messages(["Puzzle created with {} pieces".format(len(pieces))])
@@ -107,6 +104,7 @@ def parse_arguments():
     parser.add_argument("--destination", type=str, default="./out.jpg",
                         help="Path to the output file.")
     parser.add_argument("--size", type=int, default=DEFAULT_PIECE_SIZE, help=piece_size_help)
+    parser.add_argument("--position_file", type=str, default="image_position.txt")
 
     return parser.parse_args()
 
@@ -114,4 +112,4 @@ def parse_arguments():
 if __name__ == "__main__":
     ARGS = parse_arguments()
     validate_arguments(ARGS)
-    create_puzzle(ARGS.source, ARGS.destination, ARGS.size)
+    create_puzzle(ARGS.source, ARGS.destination, ARGS.size, ARGS.position_file)
